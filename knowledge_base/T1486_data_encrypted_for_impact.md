@@ -23,4 +23,5 @@ This is ransomware behavior. Attackers encrypt files to make them unusable and d
 5. Look for earlier signs: phishing, credential dumping, remote access.
 
 ## Severity guidance
-- Critical in nearly all confirmed cases. Treat early indicators (shadow copy deletion, mass renames) as high until proven otherwise.
+- Critical in nearly all confirmed cases.
+- Treat early indicators (shadow copy deletion, mass renames) as high until proven otherwise.
