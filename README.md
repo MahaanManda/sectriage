@@ -4,7 +4,7 @@ An LLM agent that triages security alerts. It decides whether an alert is a true
 
 **Live demo:** https://sectriage.onrender.com (free hosting, so the first load after idle can take up to a minute)
 
-> **Status:** works end to end locally. The numbers below come from small synthetic test sets, so read them as directional, not as a benchmark. See [Limitations](#limitations).
+> **Status:** deployed and working end to end. The numbers below come from small synthetic test sets, so read them as directional, not as a benchmark. See [Limitations](#limitations).
 
 ## What it does
 
