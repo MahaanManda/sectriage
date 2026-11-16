@@ -2,6 +2,8 @@
 
 An LLM agent that triages security alerts. It decides whether an alert is a true positive or benign, assigns a category and severity, and recommends next steps. It does this by searching a knowledge base of attack-technique notes, response playbooks, and an organization's own policies, then citing what it used. Includes an evaluation harness that compares the agent against a no-retrieval baseline, a FastAPI service, and a small web UI.
 
+**Live demo:** https://sectriage.onrender.com (free hosting, so the first load after idle can take up to a minute)
+
 > **Status:** works end to end locally. The numbers below come from small synthetic test sets, so read them as directional, not as a benchmark. See [Limitations](#limitations).
 
 ## What it does
