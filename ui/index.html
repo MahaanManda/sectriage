@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SecTriage</title>
+<style>
+  :root {
+    --bg:#f6f7f9; --card:#fff; --text:#1b2330; --muted:#5d6879; --border:#dde1e8; --accent:#2f5bea;
+    --ok:#1a7f4b; --okbg:#e3f4ea; --bad:#b42318; --badbg:#fde8e6;
+    --sev-informational:#5d6879; --sev-low:#2f7d9b; --sev-medium:#b7791f; --sev-high:#c2410c; --sev-critical:#b42318;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg:#12161d; --card:#1b212b; --text:#e6e9ef; --muted:#9aa5b6; --border:#2d3644; --accent:#7b9bff;
+      --ok:#5fd69a; --okbg:#173326; --bad:#ff8f84; --badbg:#3b1b19;
+      --sev-informational:#9aa5b6; --sev-low:#6cc0dc; --sev-medium:#f0b45a; --sev-high:#ff9a5c; --sev-critical:#ff8f84;
+    }
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif; }
+  main { max-width:1000px; margin:0 auto; padding:24px 16px 48px; }
+  h1 { font-size:22px; margin:0 0 4px; }
+  .sub { color:var(--muted); margin:0 0 20px; }
+  .grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  @media (max-width:760px) { .grid { grid-template-columns:1fr; } }
+  .card { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:16px; }
+  label { display:block; font-size:12px; font-weight:600; color:var(--muted); margin:10px 0 3px; text-transform:uppercase; letter-spacing:.04em; }
+  input, select, textarea { width:100%; padding:8px 10px; font:inherit; color:var(--text); background:var(--bg); border:1px solid var(--border); border-radius:6px; }
+  textarea { min-height:90px; resize:vertical; }
+  .row { display:flex; gap:10px; } .row > * { flex:1; }
+  button { margin-top:14px; padding:10px 16px; font:inherit; font-weight:600; color:#fff; background:var(--accent); border:0; border-radius:6px; cursor:pointer; }
+  button:disabled { opacity:.55; cursor:wait; }
+  .pill { display:inline-block; padding:2px 10px; border-radius:999px; font-weight:600; font-size:13px; }
+  .tp { color:var(--bad); background:var(--badbg); } .benign { color:var(--ok); background:var(--okbg); }
+  .head { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:8px; }
+  .sev { font-weight:700; text-transform:uppercase; font-size:13px; }
+  h2 { font-size:14px; margin:16px 0 6px; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; }
+  ul { margin:0; padding-left:20px; } li { margin:3px 0; }
+  code { font-family:ui-monospace,Consolas,monospace; font-size:13px; background:var(--bg); padding:1px 5px; border-radius:4px; }
+  .muted { color:var(--muted); } .err { color:var(--bad); }
+  .cmp { margin-top:12px; padding:10px; border:1px dashed var(--border); border-radius:6px; font-size:14px; }
+  .match { color:var(--ok); font-weight:600; } .miss { color:var(--bad); font-weight:600; }
+  .bar { height:6px; background:var(--border); border-radius:3px; overflow:hidden; width:120px; display:inline-block; vertical-align:middle; }
+  .bar > span { display:block; height:100%; background:var(--accent); }
+</style>
+</head>
+<body>
+<main>
+  <h1>SecTriage</h1>
+  <p class="sub">AI security-alert triage with retrieval over a knowledge base. Pick a sample or enter an alert. All environments and alerts here are fictional.</p>
+
+  <div class="grid">
+    <section class="card">
+      <label for="sample">Sample alert</label>
+      <select id="sample"><option value="">Loading…</option></select>
+
+      <label for="title">Title</label><input id="title" maxlength="300">
+      <div class="row">
+        <div><label for="host">Host</label><input id="host" maxlength="200"></div>
+        <div><label for="user">User</label><input id="user" maxlength="200"></div>
+      </div>
+      <div class="row">
+        <div><label for="source">Source</label><input id="source" maxlength="100"></div>
+        <div><label for="timestamp">Timestamp (UTC)</label><input id="timestamp" maxlength="64"></div>
+      </div>
+      <label for="details">Details</label><textarea id="details" maxlength="4000"></textarea>
+
+      <label for="mode">Mode</label>
+      <select id="mode">
+        <option value="agent">Agent: searches the knowledge base itself</option>
+        <option value="rag">RAG: retrieval up front</option>
+        <option value="baseline">Baseline: no knowledge base</option>
+      </select>
+      <div id="keyrow" hidden><label for="key">API key (this server requires one)</label><input id="key" type="password" autocomplete="off"></div>
+      <button id="run">Triage alert</button>
+    </section>
+
+    <section class="card" id="result" aria-live="polite">
+      <p class="muted">The verdict appears here.</p>
+    </section>
+  </div>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+const FIELDS = ["title", "host", "user", "source", "timestamp", "details"];
+let samples = [];
+
+function el(tag, text, cls) { const e = document.createElement(tag); if (text !== undefined) e.textContent = text; if (cls) e.className = cls; return e; }
+
+async function init() {
+  try {
+    const h = await (await fetch("/health")).json();
+    $("keyrow").hidden = !h.auth_required;
+    samples = await (await fetch("/samples")).json();
+  } catch (e) { $("sample").innerHTML = ""; $("sample").append(new Option("Could not load samples", "")); return; }
+  const sel = $("sample");
+  sel.innerHTML = ""; sel.append(new Option("Choose a sample…", ""));
+  for (const set of ["hard", "original"]) {
+    const g = document.createElement("optgroup");
+    g.label = set === "hard" ? "Org-specific (needs the policy documents)" : "Original set";
+    samples.filter(s => s.set === set).forEach(s => g.append(new Option(`${s.id}: ${s.alert.title}`, `${s.set}:${s.id}`)));
+    sel.append(g);
+  }
+}
+
+$("sample").addEventListener("change", e => {
+  const s = samples.find(x => `${x.set}:${x.id}` === e.target.value);
+  if (!s) return;
+  FIELDS.forEach(f => $(f).value = s.alert[f] ?? "");
+  $("result").replaceChildren(el("p", "The verdict appears here.", "muted"));
+});
+
+function render(data, sample) {
+  const t = data.triage, r = $("result");
+  const head = el("div", "", "head");
+  head.append(el("span", t.verdict === "true_positive" ? "True positive" : "Benign", "pill " + (t.verdict === "true_positive" ? "tp" : "benign")));
+  head.append(el("span", t.category.replaceAll("_", " "), "pill"));
+  const sev = el("span", t.severity, "sev"); sev.style.color = `var(--sev-${t.severity})`; head.append(sev);
+  const conf = el("span", "", "muted"); conf.append("confidence "); const bar = el("span", "", "bar"); const fill = el("span"); fill.style.width = Math.round(t.confidence * 100) + "%"; bar.append(fill); conf.append(bar, " " + Math.round(t.confidence * 100) + "%");
+  head.append(conf);
+  r.replaceChildren(head, el("p", t.reasoning));
+
+  r.append(el("h2", "Recommended actions"));
+  const ol = el("ul"); t.recommended_actions.forEach(a => ol.append(el("li", a))); r.append(ol);
+
+  r.append(el("h2", "Cited sources"));
+  if (t.cited_sources.length) { const ul = el("ul"); t.cited_sources.forEach(s => { const li = el("li"); li.append(el("code", s)); ul.append(li); }); r.append(ul); }
+  else r.append(el("p", "None.", "muted"));
+
+  if (data.searches.length) {
+    r.append(el("h2", `Agent searches (${data.searches.length})`));
+    const ul = el("ul");
+    data.searches.forEach(s => { const li = el("li", "“" + s.query + "”"); li.append(el("span", "  → " + (s.sources.join(", ") || "no results"), "muted")); ul.append(li); });
+    r.append(ul);
+  }
+  r.append(el("p", `Model ${data.model}, mode ${data.mode}.`, "muted"));
+
+  if (sample) {
+    const L = sample.label, box = el("div", "", "cmp");
+    box.append(el("strong", "Reference label for " + sample.id + ": "), `${L.verdict} / ${L.category} / ${L.severity}. `);
+    const checks = [["verdict", t.verdict === L.verdict], ["category", t.category === L.category], ["severity", t.severity === L.severity]];
+    checks.forEach(([n, ok]) => { box.append(el("span", (ok ? "✓ " : "✗ ") + n + "  ", ok ? "match" : "miss")); });
+    box.append(el("div", L.rationale, "muted"));
+    r.append(box);
+  }
+}
+
+$("run").addEventListener("click", async () => {
+  const alert = Object.fromEntries(FIELDS.map(f => [f, $(f).value.trim()]));
+  if (!alert.title || !alert.details) { $("result").replaceChildren(el("p", "Title and details are required.", "err")); return; }
+  alert.host ||= "unknown"; alert.user ||= "unknown"; alert.source ||= "unknown"; alert.timestamp ||= new Date().toISOString();
+  const sample = samples.find(x => `${x.set}:${x.id}` === $("sample").value);
+  // Only attach the reference label if the alert text is unchanged from the sample.
+  const unchanged = sample && FIELDS.every(f => (sample.alert[f] ?? "") === alert[f]);
+
+  const headers = { "Content-Type": "application/json" };
+  if (!$("keyrow").hidden && $("key").value) headers["X-API-Key"] = $("key").value;
+  $("run").disabled = true; $("run").textContent = "Triaging…";
+  $("result").replaceChildren(el("p", "Working. The agent may search the knowledge base several times (about 10–30 s).", "muted"));
+  try {
+    const resp = await fetch("/triage", { method: "POST", headers, body: JSON.stringify({ alert, mode: $("mode").value }) });
+    const body = await resp.json().catch(() => ({}));
+    if (!resp.ok) throw new Error(resp.status === 422 ? "Some fields are invalid or too long." : (body.detail || `Request failed (${resp.status})`));
+    render(body, unchanged ? sample : null);
+  } catch (e) { $("result").replaceChildren(el("p", e.message, "err")); }
+  finally { $("run").disabled = false; $("run").textContent = "Triage alert"; }
+});
+
+init();
+</script>
+</body>
+</html>

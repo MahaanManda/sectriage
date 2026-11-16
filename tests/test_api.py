@@ -99,3 +99,23 @@ def test_upstream_errors_map_to_clean_statuses(client, monkeypatch, exc, status)
     r = client.post("/triage", json={"alert": ALERT})
     assert r.status_code == status
     assert "test-key" not in r.text
+
+
+def test_index_serves_the_ui(client):
+    r = client.get("/")
+    assert r.status_code == 200 and "SecTriage" in r.text
+
+
+def test_samples_list_both_sets_with_labels(client):
+    items = client.get("/samples").json()
+    sets = {i["set"] for i in items}
+    assert sets == {"hard", "original"}
+    assert len(items) == 66
+    assert all({"id", "alert", "label"} <= set(i) for i in items)
+    assert all(set(i["alert"]) == {"timestamp", "source", "host", "user", "title", "details"} for i in items)
+
+
+def test_health_reports_whether_auth_is_required(client, monkeypatch):
+    assert client.get("/health").json()["auth_required"] is False
+    monkeypatch.setenv("TRIAGE_API_TOKEN", "x")
+    assert client.get("/health").json()["auth_required"] is True

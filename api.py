@@ -12,15 +12,17 @@ import os
 import threading
 import time
 from collections import defaultdict, deque
+from pathlib import Path
 from typing import Literal
 
 import anthropic
 from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, Header, HTTPException, Request
+from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
 from agent import triage_alert_agent
-from triage import MODEL, Triage, triage_alert
+from triage import MODEL, Triage, load_alerts, triage_alert
 
 load_dotenv()
 
@@ -82,9 +84,28 @@ def rate_limit(request: Request):
 
 # ---- routes -----------------------------------------------------------------------
 
+UI_FILE = Path(__file__).parent / "ui" / "index.html"
+SAMPLE_SETS = {"hard": "data/alerts_hard.json", "original": "data/alerts.json"}
+
+
+@app.get("/", include_in_schema=False)
+def index():
+    return FileResponse(UI_FILE)
+
+
 @app.get("/health")
 def health():
-    return {"status": "ok", "model": MODEL}
+    return {"status": "ok", "model": MODEL, "auth_required": bool(os.getenv("TRIAGE_API_TOKEN"))}
+
+
+@app.get("/samples")
+def samples():
+    """Demo alerts with their reference labels (the labels are never sent to the model)."""
+    out = []
+    for set_name, path in SAMPLE_SETS.items():
+        for r in load_alerts(Path(__file__).parent / path):
+            out.append({"id": r["id"], "set": set_name, "alert": r["alert"], "label": r["label"]})
+    return out
 
 
 @app.post("/triage", response_model=TriageResponse, dependencies=[Depends(require_token), Depends(rate_limit)])
