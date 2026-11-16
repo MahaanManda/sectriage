@@ -77,20 +77,27 @@ def main():
     ap.add_argument("--modes", default="baseline,rag,agent")
     ap.add_argument("--limit", type=int)
     ap.add_argument("--workers", type=int, default=4)
+    ap.add_argument("--rescore", action="store_true", help="re-score saved predictions against current labels; no API calls")
     args = ap.parse_args()
 
     records = load_alerts(args.data)[: args.limit]
     os.makedirs(args.out, exist_ok=True)
-    client = anthropic.Anthropic()
-    get_collection()  # initialise before worker threads start
+    client = None if args.rescore else anthropic.Anthropic()
+    if not args.rescore:
+        get_collection()  # initialise before worker threads start
     summaries = []
 
     for mode in args.modes.split(","):
-        print(f"Running {mode} on {len(records)} alerts...", flush=True)
-        with ThreadPoolExecutor(args.workers) as ex:
-            results = list(ex.map(lambda r: run_one(mode, r, client), records))
-        with open(f"{args.out}/{mode}.json", "w", encoding="utf-8") as f:
-            json.dump(results, f, indent=2)
+        if args.rescore:
+            print(f"Re-scoring saved {mode} predictions...", flush=True)
+            with open(f"{args.out}/{mode}.json", encoding="utf-8") as f:
+                results = json.load(f)[: args.limit]
+        else:
+            print(f"Running {mode} on {len(records)} alerts...", flush=True)
+            with ThreadPoolExecutor(args.workers) as ex:
+                results = list(ex.map(lambda r: run_one(mode, r, client), records))
+            with open(f"{args.out}/{mode}.json", "w", encoding="utf-8") as f:
+                json.dump(results, f, indent=2)
         summary, misses = score(mode, records, results)
         summaries.append(summary)
         print(f"  {mode}: verdict {summary['verdict']:.0%}, category {summary['category']:.0%}, errors {summary['errors']}")

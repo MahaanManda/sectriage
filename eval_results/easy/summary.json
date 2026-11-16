@@ -1,13 +1,26 @@
 [
   {
-    "mode": "rag",
+    "mode": "baseline",
     "n": 40,
     "errors": 0,
     "verdict": 0.975,
-    "category": 0.9,
-    "severity": 0.95,
+    "category": 0.875,
+    "severity": 0.925,
     "severity_within1": 0.975,
-    "false_alarms": 1,
+    "false_alarms": 0,
+    "missed_threats": 1,
+    "retrieval_recall": null,
+    "citation_recall": null
+  },
+  {
+    "mode": "rag",
+    "n": 40,
+    "errors": 0,
+    "verdict": 1.0,
+    "category": 0.925,
+    "severity": 0.975,
+    "severity_within1": 1.0,
+    "false_alarms": 0,
     "missed_threats": 0,
     "retrieval_recall": 0.7708333333333333,
     "citation_recall": 0.7777777777777778
@@ -16,13 +29,13 @@
     "mode": "agent",
     "n": 40,
     "errors": 0,
-    "verdict": 0.975,
-    "category": 0.85,
-    "severity": 0.95,
-    "severity_within1": 0.975,
-    "false_alarms": 1,
+    "verdict": 1.0,
+    "category": 0.875,
+    "severity": 0.975,
+    "severity_within1": 1.0,
+    "false_alarms": 0,
     "missed_threats": 0,
-    "retrieval_recall": 0.8125,
-    "citation_recall": 0.8125
+    "retrieval_recall": 0.80625,
+    "citation_recall": 0.80625
   }
 ]

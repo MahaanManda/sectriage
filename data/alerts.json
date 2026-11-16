@@ -777,15 +777,27 @@
       "details": "tech_rivera connected by RDP from admin workstation ADM-01 to 20 servers within 2 hours during the approved patch window, ticket CHG-1050."
     },
     "label": {
-      "verdict": "benign",
-      "category": "benign",
-      "severity": "informational",
-      "rationale": "Known admin, known source, approved change and window."
+      "verdict": "true_positive",
+      "category": "remote_services",
+      "severity": "high",
+      "rationale": "Under org policy, server patching is Sundays 01:00-05:00 UTC by adm_ accounts from JUMP01. This is a Wednesday from a non-adm_ account on ADM-01, and CHG-1050 is not in the change register."
     },
     "relevant_docs": [
       "T1021_remote_services.md",
-      "playbook_false_positives_msp.md"
-    ]
+      "org_maintenance_windows.md",
+      "org_service_accounts.md",
+      "org_severity_policy.md"
+    ],
+    "label_revision": {
+      "date": "2026-11-16",
+      "previous": {
+        "verdict": "benign",
+        "category": "benign",
+        "severity": "informational",
+        "rationale": "Known admin, known source, approved change and window."
+      },
+      "reason": "Label contradicted the Harbor Logistics policy documents added on Day 8 (policy is the source of truth). CHG-1050 is not in the change register, patching runs Sundays from JUMP01 by adm_ accounts (this is a Wednesday from ADM-01 by a non-adm_ account). Severity High assumes the 20 servers include Tier 1 assets; the alert does not list them."
+    }
   },
   {
     "id": "A039",
