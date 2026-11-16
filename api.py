@@ -6,6 +6,7 @@ GET  /health   liveness check
 Optional protection for a public deployment (both read from the environment, never hard-coded):
   TRIAGE_API_TOKEN      if set, requests must send it in the X-API-Key header
   RATE_LIMIT_PER_MIN    max /triage calls per client IP per minute (default 10)
+  DAILY_TRIAGE_LIMIT    max /triage calls per UTC day across all clients (default 300)
 """
 import hmac
 import os
@@ -82,6 +83,21 @@ def rate_limit(request: Request):
         q.append(now)
 
 
+_daily = {"day": None, "count": 0}
+
+
+def daily_cap():
+    """Global ceiling on /triage calls per UTC day so a public deployment cannot run up a bill."""
+    limit = int(os.getenv("DAILY_TRIAGE_LIMIT", "300"))
+    today = time.strftime("%Y-%m-%d", time.gmtime())
+    with _hits_lock:
+        if _daily["day"] != today:
+            _daily.update(day=today, count=0)
+        if _daily["count"] >= limit:
+            raise HTTPException(status_code=429, detail="Daily demo limit reached; try again tomorrow")
+        _daily["count"] += 1
+
+
 # ---- routes -----------------------------------------------------------------------
 
 UI_FILE = Path(__file__).parent / "ui" / "index.html"
@@ -108,7 +124,7 @@ def samples():
     return out
 
 
-@app.post("/triage", response_model=TriageResponse, dependencies=[Depends(require_token), Depends(rate_limit)])
+@app.post("/triage", response_model=TriageResponse, dependencies=[Depends(require_token), Depends(rate_limit), Depends(daily_cap)])
 def triage(req: TriageRequest):
     alert = req.alert.model_dump()
     try:

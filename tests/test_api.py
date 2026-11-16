@@ -14,6 +14,8 @@ ALERT = {"timestamp": "2026-11-11T14:05:00Z", "source": "Windows Security", "hos
 @pytest.fixture(autouse=True)
 def clean(monkeypatch):
     api._hits.clear()
+    api._daily.update(day=None, count=0)
+    monkeypatch.delenv("DAILY_TRIAGE_LIMIT", raising=False)
     monkeypatch.delenv("TRIAGE_API_TOKEN", raising=False)
     monkeypatch.delenv("RATE_LIMIT_PER_MIN", raising=False)
 
@@ -119,3 +121,11 @@ def test_health_reports_whether_auth_is_required(client, monkeypatch):
     assert client.get("/health").json()["auth_required"] is False
     monkeypatch.setenv("TRIAGE_API_TOKEN", "x")
     assert client.get("/health").json()["auth_required"] is True
+
+
+def test_daily_cap_applies_across_clients(client, monkeypatch):
+    monkeypatch.setattr(api, "triage_alert_agent", fake_agent)
+    monkeypatch.setenv("DAILY_TRIAGE_LIMIT", "2")
+    monkeypatch.setenv("RATE_LIMIT_PER_MIN", "100")
+    codes = [client.post("/triage", json={"alert": ALERT}).status_code for _ in range(3)]
+    assert codes == [200, 200, 429]
