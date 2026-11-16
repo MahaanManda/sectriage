@@ -1,7 +1,7 @@
 """Evaluate triage modes on data/alerts.json. Labels are never shown to the model.
 
-Usage: python eval.py [--modes baseline,rag,agent] [--limit N] [--workers 4]
-Writes per-alert results to eval_results/<mode>.json and prints a comparison table.
+Usage: python eval.py [--data data/alerts.json] [--out eval_results/easy] [--modes baseline,rag,agent] [--limit N] [--workers 4]
+Writes per-alert results to <out>/<mode>.json and prints a comparison table.
 """
 import argparse
 import json
@@ -14,7 +14,6 @@ from agent import triage_alert_agent
 from triage import get_collection, load_alerts, triage_alert
 
 SEV = ["informational", "low", "medium", "high", "critical"]
-OUT_DIR = "eval_results"
 
 
 def run_one(mode, record, client):
@@ -73,13 +72,15 @@ def score(mode, records, results):
 
 def main():
     ap = argparse.ArgumentParser()
+    ap.add_argument("--data", default="data/alerts.json")
+    ap.add_argument("--out", default="eval_results/easy")
     ap.add_argument("--modes", default="baseline,rag,agent")
     ap.add_argument("--limit", type=int)
     ap.add_argument("--workers", type=int, default=4)
     args = ap.parse_args()
 
-    records = load_alerts()[: args.limit]
-    os.makedirs(OUT_DIR, exist_ok=True)
+    records = load_alerts(args.data)[: args.limit]
+    os.makedirs(args.out, exist_ok=True)
     client = anthropic.Anthropic()
     get_collection()  # initialise before worker threads start
     summaries = []
@@ -88,7 +89,7 @@ def main():
         print(f"Running {mode} on {len(records)} alerts...", flush=True)
         with ThreadPoolExecutor(args.workers) as ex:
             results = list(ex.map(lambda r: run_one(mode, r, client), records))
-        with open(f"{OUT_DIR}/{mode}.json", "w", encoding="utf-8") as f:
+        with open(f"{args.out}/{mode}.json", "w", encoding="utf-8") as f:
             json.dump(results, f, indent=2)
         summary, misses = score(mode, records, results)
         summaries.append(summary)
@@ -96,7 +97,7 @@ def main():
         for mid, exp, got in misses:
             print(f"    miss {mid}: expected {exp}, got {got}")
 
-    with open(f"{OUT_DIR}/summary.json", "w", encoding="utf-8") as f:
+    with open(f"{args.out}/summary.json", "w", encoding="utf-8") as f:
         json.dump(summaries, f, indent=2)
 
     pct = lambda x: "  n/a" if x is None else f"{x:5.0%}"

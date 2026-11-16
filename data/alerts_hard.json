@@ -1,0 +1,236 @@
+[
+  {
+    "id": "H001",
+    "alert": {"timestamp": "2026-11-08T02:14:00Z", "source": "Windows Security", "host": "multiple", "user": "adm_jkhan",
+      "title": "Admin account logged on to many servers",
+      "details": "adm_jkhan logged on to 14 servers (network logon) in 40 minutes from 10.20.5.20 (JUMP01)."},
+    "label": {"verdict": "benign", "category": "benign", "severity": "informational",
+      "rationale": "Sunday 02:14 UTC is inside the weekly server patch window; adm_ account from JUMP01 is the expected pattern."},
+    "relevant_docs": ["org_maintenance_windows.md", "org_service_accounts.md", "playbook_false_positives_msp.md"]
+  },
+  {
+    "id": "H002",
+    "alert": {"timestamp": "2026-11-11T14:05:00Z", "source": "Windows Security", "host": "multiple", "user": "adm_jkhan",
+      "title": "Admin account logged on to many servers",
+      "details": "adm_jkhan logged on to 11 servers (network logon) in 25 minutes from 10.20.7.22 (WKS-022)."},
+    "label": {"verdict": "true_positive", "category": "remote_services", "severity": "high",
+      "rationale": "Admin logons must come from JUMP01 or RMM01, not a workstation, and this is outside any window. Privileged account involved, so High."},
+    "relevant_docs": ["org_service_accounts.md", "org_maintenance_windows.md", "org_severity_policy.md"]
+  },
+  {
+    "id": "H003",
+    "alert": {"timestamp": "2026-11-04T03:20:00Z", "source": "Network IDS", "host": "10.20.5.15", "user": "n/a",
+      "title": "Port sweep across internal subnets",
+      "details": "Source 10.20.5.15 probed ports 22, 135, 445, 3389 on 1,840 internal addresses over 35 minutes."},
+    "label": {"verdict": "benign", "category": "benign", "severity": "informational",
+      "rationale": "10.20.5.15 is NESS01 and Wednesday 03:20 UTC is the vulnerability scan window."},
+    "relevant_docs": ["org_approved_tools.md", "org_maintenance_windows.md"]
+  },
+  {
+    "id": "H004",
+    "alert": {"timestamp": "2026-11-04T03:25:00Z", "source": "Network IDS", "host": "10.20.7.88", "user": "n/a",
+      "title": "Port sweep across internal subnets",
+      "details": "Source 10.20.7.88 probed ports 22, 135, 445, 3389 on 1,840 internal addresses over 35 minutes. Host 10.20.7.88 is WKS-031, user tgreene."},
+    "label": {"verdict": "true_positive", "category": "network_discovery", "severity": "medium",
+      "rationale": "Scanning is approved only from NESS01. A standard user's Tier 2 workstation doing it is unapproved discovery, so Medium."},
+    "relevant_docs": ["org_approved_tools.md", "org_severity_policy.md", "T1046_network_service_discovery.md"]
+  },
+  {
+    "id": "H005",
+    "alert": {"timestamp": "2026-11-10T11:00:00Z", "source": "EDR", "host": "WKS-040", "user": "SYSTEM",
+      "title": "Process accessed LSASS memory",
+      "details": "C:\\Program Files\\SentinelGuard\\sgservice.exe opened a handle to lsass.exe with PROCESS_VM_READ. Binary is signed."},
+    "label": {"verdict": "benign", "category": "benign", "severity": "informational",
+      "rationale": "SentinelGuard is the approved endpoint security product, running from its expected install path."},
+    "relevant_docs": ["org_approved_tools.md", "playbook_false_positives_msp.md"]
+  },
+  {
+    "id": "H006",
+    "alert": {"timestamp": "2026-11-12T09:40:00Z", "source": "EDR", "host": "WKS-061", "user": "dhall",
+      "title": "Process accessed LSASS memory",
+      "details": "C:\\ProgramData\\SentinelGuard\\sgservice.exe opened a handle to lsass.exe with PROCESS_VM_READ. Process started 6 minutes ago under user dhall."},
+    "label": {"verdict": "true_positive", "category": "credential_dumping", "severity": "medium",
+      "rationale": "The real SentinelGuard runs from Program Files as SYSTEM. Same name from ProgramData under a user is a masquerade. Tier 2 workstation, standard user: Medium."},
+    "relevant_docs": ["org_approved_tools.md", "org_severity_policy.md", "T1003_credential_dumping.md"]
+  },
+  {
+    "id": "H007",
+    "alert": {"timestamp": "2026-11-10T16:22:00Z", "source": "Windows Security", "host": "FS01", "user": "svc_backup",
+      "title": "Interactive logon by service account",
+      "details": "svc_backup logged on to FS01 via RDP (logon type 10) from 10.20.7.88."},
+    "label": {"verdict": "true_positive", "category": "valid_accounts", "severity": "high",
+      "rationale": "svc_backup is network-only from BACKUP01. RDP from a workstation IP onto a Tier 1 server with a privileged account is misuse. High."},
+    "relevant_docs": ["org_service_accounts.md", "org_severity_policy.md", "T1078_valid_accounts.md"]
+  },
+  {
+    "id": "H008",
+    "alert": {"timestamp": "2026-11-09T23:15:00Z", "source": "Windows Security", "host": "multiple", "user": "svc_backup",
+      "title": "Service account logged on to multiple servers",
+      "details": "svc_backup network logons to FS01, FS02 and SQL01 within 2 minutes, source 10.20.5.30."},
+    "label": {"verdict": "benign", "category": "benign", "severity": "informational",
+      "rationale": "Source 10.20.5.30 is BACKUP01; targets match svc_backup's allowed list; 23:15 UTC is inside the nightly backup window."},
+    "relevant_docs": ["org_service_accounts.md", "org_maintenance_windows.md"]
+  },
+  {
+    "id": "H009",
+    "alert": {"timestamp": "2026-11-09T23:20:00Z", "source": "Windows Security", "host": "DC01", "user": "svc_backup",
+      "title": "Service account logged on to domain controller",
+      "details": "svc_backup network logon to DC01 from 10.20.5.30, followed by a directory replication request."},
+    "label": {"verdict": "true_positive", "category": "credential_dumping", "severity": "critical",
+      "rationale": "svc_backup is limited to FS01, FS02 and SQL01. A logon to DC01 with a replication request looks like a DCSync attempt; Tier 0 asset makes it Critical."},
+    "relevant_docs": ["org_service_accounts.md", "org_severity_policy.md", "T1003_credential_dumping.md"]
+  },
+  {
+    "id": "H010",
+    "alert": {"timestamp": "2026-11-05T10:12:00Z", "source": "EDR", "host": "WKS-019", "user": "ocruz",
+      "title": "Remote access software started",
+      "details": "AnyDesk.exe started from C:\\Users\\ocruz\\Downloads with unattended access enabled; outbound connection to AnyDesk relay servers."},
+    "label": {"verdict": "true_positive", "category": "remote_services", "severity": "medium",
+      "rationale": "Only PatchPilot Remote is approved. Unapproved remote-access tool with unattended access on a standard user's workstation: Medium."},
+    "relevant_docs": ["org_approved_tools.md", "org_severity_policy.md"]
+  },
+  {
+    "id": "H011",
+    "alert": {"timestamp": "2026-11-10T15:10:00Z", "source": "EDR", "host": "WKS-014", "user": "adm_tpatel",
+      "title": "Remote control session started",
+      "details": "Remote session from RMM01 (10.20.5.10) to WKS-014 opened by adm_tpatel using C:\\Program Files\\PatchPilot\\ppagent.exe."},
+    "label": {"verdict": "benign", "category": "benign", "severity": "informational",
+      "rationale": "PatchPilot Remote from RMM01 by a named technician is the approved support path."},
+    "relevant_docs": ["org_approved_tools.md", "org_service_accounts.md"]
+  },
+  {
+    "id": "H012",
+    "alert": {"timestamp": "2026-11-10T00:40:00Z", "source": "Firewall", "host": "FS01", "user": "svc_backup",
+      "title": "Large outbound transfer to cloud storage",
+      "details": "FS01 uploaded 18 GB over HTTPS to s3.amazonaws.com, bucket harbor-backup-prod, in 50 minutes."},
+    "label": {"verdict": "benign", "category": "benign", "severity": "informational",
+      "rationale": "Approved destination bucket, approved account, inside the nightly backup window."},
+    "relevant_docs": ["org_approved_tools.md", "org_service_accounts.md", "org_maintenance_windows.md"]
+  },
+  {
+    "id": "H013",
+    "alert": {"timestamp": "2026-11-10T00:40:00Z", "source": "Firewall", "host": "FS01", "user": "svc_backup",
+      "title": "Large outbound transfer to cloud storage",
+      "details": "FS01 uploaded 18 GB over HTTPS to s3.amazonaws.com, bucket harbor-backup-stage, in 50 minutes."},
+    "label": {"verdict": "true_positive", "category": "data_exfiltration", "severity": "high",
+      "rationale": "Only harbor-backup-prod is approved; a look-alike bucket is an unapproved destination. Tier 1 server and a service account: High."},
+    "relevant_docs": ["org_approved_tools.md", "org_severity_policy.md", "playbook_data_exfiltration.md"]
+  },
+  {
+    "id": "H014",
+    "alert": {"timestamp": "2026-11-06T13:30:00Z", "source": "Proxy", "host": "WKS-044", "user": "mchen",
+      "title": "Large upload to file-sharing service",
+      "details": "Dropbox desktop client on WKS-044 uploaded 2.1 GB to dropbox.com in 20 minutes, from folder C:\\Users\\mchen\\Documents\\Campaigns."},
+    "label": {"verdict": "true_positive", "category": "data_exfiltration", "severity": "medium",
+      "rationale": "Personal cloud storage is not approved and the upload exceeds 500 MB. Standard user, no evidence of compromise beyond that: Medium."},
+    "relevant_docs": ["org_approved_tools.md", "org_severity_policy.md", "playbook_data_exfiltration.md"]
+  },
+  {
+    "id": "H015",
+    "alert": {"timestamp": "2026-11-09T15:03:00Z", "source": "Identity Provider", "host": "IDP", "user": "lnguyen",
+      "title": "Sign-in from new country",
+      "details": "Successful sign-in for lnguyen from Toronto, Canada (IP 192.0.2.77). MFA completed with the user's registered authenticator. Device is known."},
+    "label": {"verdict": "benign", "category": "benign", "severity": "informational",
+      "rationale": "Canada is an expected country, MFA was completed and the device is known."},
+    "relevant_docs": ["org_approved_tools.md", "playbook_suspicious_login.md"]
+  },
+  {
+    "id": "H016",
+    "alert": {"timestamp": "2026-11-07T04:12:00Z", "source": "Identity Provider", "host": "IDP", "user": "pjones",
+      "title": "Sign-in from new country",
+      "details": "Successful sign-in for pjones (Finance department) from Bucharest, Romania (IP 203.0.113.190) on a new device. MFA approved 40 seconds after a push prompt. No travel notice on file."},
+    "label": {"verdict": "true_positive", "category": "valid_accounts", "severity": "high",
+      "rationale": "Unexpected country, new device, no travel notice; Finance user, so High under the severity policy."},
+    "relevant_docs": ["org_approved_tools.md", "org_severity_policy.md", "playbook_suspicious_login.md", "T1078_valid_accounts.md"]
+  },
+  {
+    "id": "H017",
+    "alert": {"timestamp": "2026-11-13T17:48:00Z", "source": "EDR", "host": "WKS-052", "user": "rlee",
+      "title": "Shadow copies deleted",
+      "details": "cmd.exe ran 'vssadmin delete shadows /all /quiet' on WKS-052, started by user rlee. No other alerts on this host."},
+    "label": {"verdict": "true_positive", "category": "ransomware", "severity": "critical",
+      "rationale": "Shadow copy deletion outside backup tooling is a ransomware indicator, which is Critical on any host under the severity policy."},
+    "relevant_docs": ["org_maintenance_windows.md", "org_severity_policy.md", "playbook_ransomware_indicators.md"]
+  },
+  {
+    "id": "H018",
+    "alert": {"timestamp": "2026-11-09T23:50:00Z", "source": "EDR", "host": "SQL01", "user": "svc_backup",
+      "title": "Shadow copy storage modified",
+      "details": "vssadmin resize shadowstorage /for=D: /on=D: /maxsize=20% ran on SQL01 under svc_backup, parent process Veeam.Backup.Service.exe."},
+    "label": {"verdict": "benign", "category": "benign", "severity": "informational",
+      "rationale": "Veeam via svc_backup resizing shadow storage on SQL01 inside the backup window is expected."},
+    "relevant_docs": ["org_maintenance_windows.md", "org_service_accounts.md", "org_approved_tools.md"]
+  },
+  {
+    "id": "H019",
+    "alert": {"timestamp": "2026-11-15T02:00:00Z", "source": "EDR", "host": "multiple", "user": "SYSTEM",
+      "title": "Encoded PowerShell from management agent",
+      "details": "C:\\Program Files\\PatchPilot\\ppagent.exe launched powershell.exe -EncodedCommand on 58 workstations between 02:00 and 02:20. Command line includes the comment 'CHG-2052'."},
+    "label": {"verdict": "benign", "category": "benign", "severity": "informational",
+      "rationale": "CHG-2052 is in the change register for this exact window and scope, and the tool and path are approved."},
+    "relevant_docs": ["org_maintenance_windows.md", "org_approved_tools.md", "playbook_false_positives_msp.md"]
+  },
+  {
+    "id": "H020",
+    "alert": {"timestamp": "2026-11-11T16:20:00Z", "source": "EDR", "host": "WKS-033", "user": "SYSTEM",
+      "title": "Encoded PowerShell from management agent",
+      "details": "C:\\Program Files\\PatchPilot\\ppagent.exe launched powershell.exe -EncodedCommand on WKS-033 only. Command line includes the comment 'CHG-2060'."},
+    "label": {"verdict": "true_positive", "category": "scripting", "severity": "medium",
+      "rationale": "Approved tool, but outside any window and CHG-2060 is not in the change register. Policy treats it as suspicious until a technician confirms: Medium."},
+    "relevant_docs": ["org_maintenance_windows.md", "org_severity_policy.md", "playbook_false_positives_msp.md"]
+  },
+  {
+    "id": "H021",
+    "alert": {"timestamp": "2026-11-10T02:00:00Z", "source": "Windows Security", "host": "SQL01", "user": "svc_sql",
+      "title": "Scheduled task created or updated",
+      "details": "Task 'DBMaint' registered by svc_sql on SQL01. Action: powershell.exe -File C:\\Scripts\\dbmaint.ps1. Trigger: daily at 02:00."},
+    "label": {"verdict": "benign", "category": "benign", "severity": "informational",
+      "rationale": "DBMaint running C:\\Scripts\\dbmaint.ps1 nightly at 02:00 is svc_sql's documented task."},
+    "relevant_docs": ["org_service_accounts.md", "T1053_scheduled_task_job.md"]
+  },
+  {
+    "id": "H022",
+    "alert": {"timestamp": "2026-11-12T22:30:00Z", "source": "Windows Security", "host": "SQL01", "user": "svc_sql",
+      "title": "Scheduled task created",
+      "details": "Task 'WinUpdateSvc' registered by svc_sql on SQL01. Action: C:\\Users\\Public\\update.exe. Trigger: daily at 22:45."},
+    "label": {"verdict": "true_positive", "category": "scheduled_task", "severity": "high",
+      "rationale": "svc_sql creates no tasks other than DBMaint. A new task running an executable from a public folder is persistence; Tier 1 server and a service account: High."},
+    "relevant_docs": ["org_service_accounts.md", "org_severity_policy.md", "T1053_scheduled_task_job.md"]
+  },
+  {
+    "id": "H023",
+    "alert": {"timestamp": "2026-11-08T03:15:00Z", "source": "Windows Security", "host": "FS02", "user": "adm_tpatel",
+      "title": "Event log cleared",
+      "details": "The Security event log on FS02 was cleared by adm_tpatel (event 1102) during a session started from JUMP01."},
+    "label": {"verdict": "true_positive", "category": "indicator_removal", "severity": "high",
+      "rationale": "Clearing event logs is never covered by patching or a ticket. Tier 1 server and a privileged account: High, even though the session came from JUMP01 in the patch window."},
+    "relevant_docs": ["org_maintenance_windows.md", "org_severity_policy.md", "T1070_indicator_removal.md"]
+  },
+  {
+    "id": "H024",
+    "alert": {"timestamp": "2026-11-08T02:30:00Z", "source": "EDR", "host": "JUMP01", "user": "adm_jkhan",
+      "title": "PsExec executed",
+      "details": "PsExec.exe ran on JUMP01 by adm_jkhan targeting FS01 and running 'wuauclt /detectnow'."},
+    "label": {"verdict": "benign", "category": "benign", "severity": "informational",
+      "rationale": "PsExec is approved from JUMP01 by an adm_ account, and this is inside the weekly patch window."},
+    "relevant_docs": ["org_approved_tools.md", "org_maintenance_windows.md"]
+  },
+  {
+    "id": "H025",
+    "alert": {"timestamp": "2026-11-11T14:10:00Z", "source": "EDR", "host": "WKS-022", "user": "adm_jkhan",
+      "title": "PsExec executed",
+      "details": "PsExec.exe ran on WKS-022 by adm_jkhan targeting DC02 and starting a remote command shell."},
+    "label": {"verdict": "true_positive", "category": "remote_services", "severity": "critical",
+      "rationale": "PsExec is approved only from JUMP01. A workstation using it against a domain controller targets a Tier 0 asset: Critical."},
+    "relevant_docs": ["org_approved_tools.md", "org_severity_policy.md", "T1021_remote_services.md"]
+  },
+  {
+    "id": "H026",
+    "alert": {"timestamp": "2026-11-04T03:30:00Z", "source": "Windows Security", "host": "multiple", "user": "svc_scan",
+      "title": "Service account logged on to many hosts",
+      "details": "svc_scan network logons to 212 hosts in 25 minutes from 10.20.5.15. Each logon lasted under 10 seconds."},
+    "label": {"verdict": "benign", "category": "benign", "severity": "informational",
+      "rationale": "svc_scan from NESS01 on Wednesday 03:30 UTC is the scheduled credentialed scan."},
+    "relevant_docs": ["org_service_accounts.md", "org_maintenance_windows.md"]
+  }
+]

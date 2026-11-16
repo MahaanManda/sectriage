@@ -1,0 +1,28 @@
+[
+  {
+    "mode": "rag",
+    "n": 40,
+    "errors": 0,
+    "verdict": 0.975,
+    "category": 0.9,
+    "severity": 0.95,
+    "severity_within1": 0.975,
+    "false_alarms": 1,
+    "missed_threats": 0,
+    "retrieval_recall": 0.7708333333333333,
+    "citation_recall": 0.7777777777777778
+  },
+  {
+    "mode": "agent",
+    "n": 40,
+    "errors": 0,
+    "verdict": 0.975,
+    "category": 0.85,
+    "severity": 0.95,
+    "severity_within1": 0.975,
+    "false_alarms": 1,
+    "missed_threats": 0,
+    "retrieval_recall": 0.8125,
+    "citation_recall": 0.8125
+  }
+]

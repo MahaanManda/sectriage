@@ -1,0 +1,41 @@
+[
+  {
+    "mode": "baseline",
+    "n": 26,
+    "errors": 0,
+    "verdict": 0.8076923076923077,
+    "category": 0.7692307692307693,
+    "severity": 0.5384615384615384,
+    "severity_within1": 0.7692307692307693,
+    "false_alarms": 1,
+    "missed_threats": 4,
+    "retrieval_recall": null,
+    "citation_recall": null
+  },
+  {
+    "mode": "rag",
+    "n": 26,
+    "errors": 0,
+    "verdict": 0.8846153846153846,
+    "category": 0.8076923076923077,
+    "severity": 0.6923076923076923,
+    "severity_within1": 0.8846153846153846,
+    "false_alarms": 1,
+    "missed_threats": 2,
+    "retrieval_recall": 0.5544871794871795,
+    "citation_recall": 0.5544871794871795
+  },
+  {
+    "mode": "agent",
+    "n": 26,
+    "errors": 0,
+    "verdict": 0.9230769230769231,
+    "category": 0.9230769230769231,
+    "severity": 0.7307692307692307,
+    "severity_within1": 0.9615384615384616,
+    "false_alarms": 0,
+    "missed_threats": 2,
+    "retrieval_recall": 0.5897435897435896,
+    "citation_recall": 0.5897435897435896
+  }
+]

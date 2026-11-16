@@ -1,0 +1,520 @@
+[
+  {
+    "id": "H001",
+    "prediction": {
+      "verdict": "benign",
+      "category": "benign",
+      "severity": "informational",
+      "confidence": 0.55,
+      "reasoning": "An admin-named account (adm_jkhan) made network logons to 14 servers from a jump host (JUMP01) within 40 minutes. This fits routine administration, such as patching or maintenance, through a designated bastion. The alert has no evidence of failed logons, credential dumping, unusual source hosts, or follow-on malicious activity. The 02:14 UTC time and the breadth of servers are the only mildly unusual factors, and no change window or ticket was provided to confirm. Confidence is moderate for that reason.",
+      "recommended_actions": [
+        "Confirm with adm_jkhan or a change calendar that maintenance or patching was scheduled around 02:14 UTC on 2026-11-08",
+        "Verify the logons all originated from JUMP01 and that there were no failed logons or logons from other sources",
+        "Check for unusual process execution, new services, or scheduled tasks on the target servers during that window",
+        "If the activity cannot be validated, treat the account as potentially compromised: reset credentials and review JUMP01 session logs"
+      ],
+      "cited_sources": []
+    },
+    "retrieved": [],
+    "error": null
+  },
+  {
+    "id": "H002",
+    "prediction": {
+      "verdict": "benign",
+      "category": "benign",
+      "severity": "informational",
+      "confidence": 0.5,
+      "reasoning": "An admin account (adm_jkhan) made network logons to 11 servers in 25 minutes from a single workstation, WKS-022. This pattern is consistent with routine administration such as patching, management tooling, or inventory. The alert shows no evidence of failed logons, credential dumping, new tool deployment, unusual hours, or an unfamiliar source host. No reference material was provided. Confidence is moderate because the alert has little context. Lateral movement can't be fully ruled out without confirming that the activity matches the admin's normal behavior.",
+      "recommended_actions": [
+        "Confirm with adm_jkhan or their manager that the activity was expected, for example a change ticket, patching, or maintenance window",
+        "Verify that WKS-022 is the admin's assigned workstation and that 10.20.7.22 is its normal IP",
+        "Review the logon types and the processes run on the target servers, and check for remote service creation, PsExec, or other tool transfer",
+        "Check for failed logons or other anomalies from WKS-022 around the same time",
+        "If the activity is not confirmed, escalate and consider resetting adm_jkhan's credentials and isolating WKS-022"
+      ],
+      "cited_sources": []
+    },
+    "retrieved": [],
+    "error": null
+  },
+  {
+    "id": "H003",
+    "prediction": {
+      "verdict": "true_positive",
+      "category": "network_discovery",
+      "severity": "high",
+      "confidence": 0.7,
+      "reasoning": "Internal host 10.20.5.15 probed 1,840 internal addresses on lateral-movement ports (SSH, RPC, SMB, RDP) over 35 minutes, starting at 03:20 UTC. That is typical internal reconnaissance. No evidence in the alert shows an authorized scanner such as a vulnerability scanner or asset-discovery tool. An authorized scan is still possible, so confidence is not higher. No knowledge base sources were provided.",
+      "recommended_actions": [
+        "Check whether 10.20.5.15 is a known authorized vulnerability scanner or has a change ticket or scan schedule for this window",
+        "If it is not authorized, isolate the host from the network and begin incident response",
+        "Review the host's process, login and EDR telemetry for the scanning tool and the account that ran it",
+        "Check for follow-on activity from the host, such as SMB/RDP/SSH logins, authentication failures or new lateral connections to the probed targets",
+        "Look for signs of compromise on the host, including persistence, credential dumping and tool transfers",
+        "Reset credentials for any accounts used on the host if compromise is confirmed"
+      ],
+      "cited_sources": []
+    },
+    "retrieved": [],
+    "error": null
+  },
+  {
+    "id": "H004",
+    "prediction": {
+      "verdict": "true_positive",
+      "category": "network_discovery",
+      "severity": "high",
+      "confidence": 0.75,
+      "reasoning": "A user workstation (WKS-031, tgreene) probed ports 22, 135, 445 and 3389 on 1,840 internal addresses over 35 minutes, starting at about 03:25 UTC. These ports are the usual targets for lateral movement (SSH, RPC, SMB, RDP). A standard workstation has no normal reason to scan this widely. No alert evidence points to an authorized vulnerability scanner or IT inventory tool, so this looks like internal reconnaissance. The host may be compromised or the user may be misusing it. Confidence is below certain because I can't rule out an unannounced sanctioned scan from the alert alone.",
+      "recommended_actions": [
+        "Check with the security and IT teams whether an authorized scan or assessment was scheduled for WKS-031 or this time window",
+        "If it is not authorized, isolate WKS-031 from the network using EDR or network controls",
+        "Review the process and command-line telemetry on WKS-031 to find what initiated the scan, such as nmap, PowerShell or an unknown binary",
+        "Check authentication logs for tgreene and for the scanned hosts (445, 3389 and 22) for follow-on logons or lateral movement from 10.20.7.88",
+        "Contact tgreene to verify their activity, and consider resetting their credentials if the account may be compromised",
+        "Collect forensic triage data from the host, and hunt for similar scanning from other internal hosts"
+      ],
+      "cited_sources": []
+    },
+    "retrieved": [],
+    "error": null
+  },
+  {
+    "id": "H005",
+    "prediction": {
+      "verdict": "benign",
+      "category": "benign",
+      "severity": "informational",
+      "confidence": 0.65,
+      "reasoning": "A signed binary in Program Files (SentinelGuard sgservice.exe), running as SYSTEM, opened an LSASS handle with PROCESS_VM_READ. This is typical of security or EDR agent behavior. The alert has no evidence of memory dumping, such as a MiniDump call, a dump file written, or an unusual parent process. It also shows no suspicious access mask like PROCESS_ALL_ACCESS, no unsigned tooling, and no follow-on exfiltration. Confidence is moderate because the alert doesn't confirm that SentinelGuard is an approved product in this environment, and no knowledge base material was provided.",
+      "recommended_actions": [
+        "Confirm SentinelGuard is an approved security product deployed on WKS-040 and that its path and signer match the expected vendor",
+        "Verify the binary hash and signature against the vendor's known-good values",
+        "Consider adding a scoped exclusion for this signed process if LSASS access recurs and is confirmed legitimate",
+        "Escalate if the same process shows dump file creation, unusual command lines, or runs from a different path"
+      ],
+      "cited_sources": []
+    },
+    "retrieved": [],
+    "error": null
+  },
+  {
+    "id": "H006",
+    "prediction": {
+      "verdict": "true_positive",
+      "category": "credential_dumping",
+      "severity": "high",
+      "confidence": 0.6,
+      "reasoning": "An unsigned-looking binary (sgservice.exe) running from C:\\ProgramData, a user-writable location, opened an LSASS handle with PROCESS_VM_READ. The process was started only 6 minutes earlier under a standard user context (dhall), not as a service under SYSTEM. This pattern matches credential dumping. Security products can legitimately read LSASS, but the user-writable path, the recent start and the user context are suspicious. The alert has no signature, hash or vendor-verification data, and no reference material was provided, so confidence is moderate.",
+      "recommended_actions": [
+        "Verify the binary's digital signature, hash (VirusTotal/internal reputation) and whether SentinelGuard is an approved product deployed in this environment",
+        "Check the parent process and creation chain of sgservice.exe, and how it landed in C:\\ProgramData",
+        "If unverified, isolate WKS-061 and collect a memory/disk triage image",
+        "Reset dhall's credentials and review logons from this account and any other accounts that were logged on to the host for lateral movement",
+        "Hunt for the same file name/hash and LSASS access across the fleet",
+        "Consider enabling LSA protection / Credential Guard if not already enabled"
+      ],
+      "cited_sources": []
+    },
+    "retrieved": [],
+    "error": null
+  },
+  {
+    "id": "H007",
+    "prediction": {
+      "verdict": "true_positive",
+      "category": "valid_accounts",
+      "severity": "medium",
+      "confidence": 0.55,
+      "reasoning": "The service account svc_backup logged on to FS01 through RDP (logon type 10) from 10.20.7.88. Service accounts normally authenticate non-interactively, as batch or service logons, so an interactive RDP session is unusual. It may be misuse of a valid account or lateral movement. The alert has no baseline, no information about the source host, and no follow-on activity. An admin using the account for maintenance is also possible, so confidence is moderate. No reference material was provided.",
+      "recommended_actions": [
+        "Identify 10.20.7.88 and check whether it is an approved admin workstation or jump host",
+        "Confirm with the svc_backup owner or backup team whether an interactive session was authorized, for example a change ticket",
+        "Review the FS01 session activity: processes launched, file access, and any new accounts, tasks or services",
+        "Check for other logons by svc_backup from this source and for earlier failed attempts or password spraying",
+        "If the session is unauthorized, disable the account or reset its credentials, isolate the source host, and investigate",
+        "Longer term, deny interactive and RDP logon rights for service accounts via GPO"
+      ],
+      "cited_sources": []
+    },
+    "retrieved": [],
+    "error": null
+  },
+  {
+    "id": "H008",
+    "prediction": {
+      "verdict": "benign",
+      "category": "benign",
+      "severity": "informational",
+      "confidence": 0.6,
+      "reasoning": "A backup service account made network logons to file and SQL servers (FS01, FS02, SQL01) from one source, 10.20.5.30, within 2 minutes. This is the normal pattern for a backup job, and 23:15 is a typical backup window. The alert has no evidence of malicious activity such as failed logons, interactive or RDP logons, unusual hosts, or follow-on tooling. Confidence is moderate because the alert doesn't say whether 10.20.5.30 is the known backup server.",
+      "recommended_actions": [
+        "Confirm 10.20.5.30 is the designated backup server or media server",
+        "Check that the svc_backup logon types are network (type 3) only, with no interactive or RDP logons",
+        "Confirm the timing matches the backup schedule and that this account has done the same thing in past weeks",
+        "Escalate if the source IP is unknown, if there were failed logons beforehand, or if svc_backup shows activity outside the backup window or on other hosts"
+      ],
+      "cited_sources": []
+    },
+    "retrieved": [],
+    "error": null
+  },
+  {
+    "id": "H009",
+    "prediction": {
+      "verdict": "true_positive",
+      "category": "credential_dumping",
+      "severity": "high",
+      "confidence": 0.68,
+      "reasoning": "A service account (svc_backup) made a network logon to DC01 from 10.20.5.30 and then issued a directory replication request. This pattern matches DCSync (DRSUAPI GetNCChanges), where a non-DC host replicates AD data to pull password hashes. Backup service accounts normally don't need replication rights, and replication requests should come from other domain controllers. The alert doesn't say whether 10.20.5.30 is a known DC or a sanctioned backup or AD-sync server, so some uncertainty remains. No reference material was provided to confirm.",
+      "recommended_actions": [
+        "Identify 10.20.5.30 and check whether it is a domain controller or an approved AD backup/sync server",
+        "Review event 4662 on DC01 for DS-Replication-Get-Changes(-All) GUIDs by svc_backup, and check network telemetry for DRSUAPI traffic from the source host",
+        "Check which accounts hold replication rights (including svc_backup) and whether they were recently added",
+        "If unauthorized, isolate 10.20.5.30, disable or reset svc_backup, and begin krbtgt double reset and a credential compromise response",
+        "Review svc_backup logon history and recent activity for lateral movement or abnormal usage"
+      ],
+      "cited_sources": []
+    },
+    "retrieved": [],
+    "error": null
+  },
+  {
+    "id": "H010",
+    "prediction": {
+      "verdict": "true_positive",
+      "category": "remote_services",
+      "severity": "medium",
+      "confidence": 0.55,
+      "reasoning": "AnyDesk was run from the user's Downloads folder, not an IT-managed install path, with unattended access enabled and an outbound connection to AnyDesk relays. Unattended access on a portable, user-run copy is a common persistence and remote-access pattern for threat actors, and it is also seen in tech-support scams. The alert has no information on whether IT approved this, so legitimate use can't be ruled out. Confidence is moderate.",
+      "recommended_actions": [
+        "Contact ocruz to confirm whether they installed AnyDesk and why, and whether someone asked them to (for example a support scam caller)",
+        "Check whether AnyDesk is an approved tool in your environment and whether this host or user has an exception",
+        "If unauthorized, isolate WKS-019, terminate AnyDesk, and remove the unattended-access configuration",
+        "Review AnyDesk connection logs (ad.trace, connection_trace.txt) for remote session IDs and timing",
+        "Hunt for the same AnyDesk binary hash or relay traffic on other hosts",
+        "Check how the binary arrived in Downloads (browser, email attachment, URL) and scan the host for other tools or malware",
+        "Reset ocruz's credentials if suspicious remote sessions are found"
+      ],
+      "cited_sources": []
+    },
+    "retrieved": [],
+    "error": null
+  },
+  {
+    "id": "H011",
+    "prediction": {
+      "verdict": "benign",
+      "category": "benign",
+      "severity": "informational",
+      "confidence": 0.6,
+      "reasoning": "The alert shows a remote session from an internal RMM server (RMM01, 10.20.5.10) to WKS-014. It was opened by an admin-named account (adm_tpatel) using an agent in the standard Program Files path (PatchPilot ppagent.exe). Nothing in the alert points to malicious behavior, such as an unusual source, a user-writable binary path, or follow-on suspicious activity. This looks like routine IT administration. No reference material was provided, so I can't confirm that PatchPilot is the approved RMM tool. Confidence is moderate for that reason.",
+      "recommended_actions": [
+        "Confirm PatchPilot is the approved RMM tool and that RMM01 is a known management server",
+        "Verify with adm_tpatel or a change/ticket record that the session at 15:10Z was expected",
+        "Check the ppagent.exe signature and hash against the approved baseline",
+        "Review WKS-014 for unusual follow-on activity during the session, such as new tools, credential access, or persistence"
+      ],
+      "cited_sources": []
+    },
+    "retrieved": [],
+    "error": null
+  },
+  {
+    "id": "H012",
+    "prediction": {
+      "verdict": "benign",
+      "category": "benign",
+      "severity": "informational",
+      "confidence": 0.7,
+      "reasoning": "The alert shows a file server (FS01) using the svc_backup service account to upload 18 GB over HTTPS to an S3 bucket named harbor-backup-prod. The timing (00:40 UTC, off-hours), the account, and the bucket name all fit a scheduled backup job. Nothing in the alert points to exfiltration, such as an unknown destination, a personal account, or an unusual user. No reference material was provided, so I could not check the bucket against an approved-destination list. Confidence is moderate for that reason.",
+      "recommended_actions": [
+        "Confirm that harbor-backup-prod is an organization-owned bucket and is on the approved backup destinations list",
+        "Check that the backup job schedule and typical transfer volume for FS01 match this 18 GB upload",
+        "Verify svc_backup activity shows no interactive logins or use from other hosts",
+        "If the bucket is not recognized or the volume is anomalous, escalate as possible data exfiltration"
+      ],
+      "cited_sources": []
+    },
+    "retrieved": [],
+    "error": null
+  },
+  {
+    "id": "H013",
+    "prediction": {
+      "verdict": "benign",
+      "category": "benign",
+      "severity": "informational",
+      "confidence": 0.6,
+      "reasoning": "The alert shows a file server (FS01) uploading 18 GB to an S3 bucket named \"harbor-backup-stage\" under the svc_backup service account at 00:40 UTC. The account name, bucket name and off-hours timing all fit a scheduled backup job. Nothing in the alert points to compromise, such as an unusual account, an unknown destination or a failed-auth pattern. However, the alert doesn't confirm that the bucket belongs to the organization, so confidence is moderate.",
+      "recommended_actions": [
+        "Confirm that the harbor-backup-stage bucket belongs to the organization's AWS account and is an approved backup destination",
+        "Check that the backup schedule or job on FS01 covers this window and that the svc_backup account normally uploads at this volume",
+        "Compare the 18 GB size with previous backup transfers to FS01 and look for unusual growth",
+        "If the bucket is not recognized or the volume is anomalous, escalate as possible data exfiltration and review svc_backup logons and activity"
+      ],
+      "cited_sources": []
+    },
+    "retrieved": [],
+    "error": null
+  },
+  {
+    "id": "H014",
+    "prediction": {
+      "verdict": "benign",
+      "category": "benign",
+      "severity": "informational",
+      "confidence": 0.65,
+      "reasoning": "The Dropbox desktop client synced 2.1 GB from the user's own Documents\\Campaigns folder. This looks like normal sync behavior of a marketing or campaign working folder. The alert shows no sign of staging, archiving, unusual tools, off-hours activity, or a non-corporate destination. The main residual risk is policy: personal Dropbox use may not be sanctioned. Confidence is moderate because the alert has no information on whether the account is corporate or personal, or on the user's baseline.",
+      "recommended_actions": [
+        "Confirm with mchen or their manager that the Campaigns folder sync is expected",
+        "Check whether the Dropbox account is corporate-sanctioned or personal, per DLP/acceptable-use policy",
+        "Review the user's prior Dropbox upload baseline and whether the folder contains sensitive data",
+        "Escalate only if the account is unsanctioned and the content is sensitive, or if the user is departing or shows other anomalies"
+      ],
+      "cited_sources": []
+    },
+    "retrieved": [],
+    "error": null
+  },
+  {
+    "id": "H015",
+    "prediction": {
+      "verdict": "benign",
+      "category": "benign",
+      "severity": "informational",
+      "confidence": 0.75,
+      "reasoning": "The alert shows a successful sign-in from a new country (Canada). MFA was completed with the user's registered authenticator, and the device is known. Nothing in the alert points to compromise, such as failed attempts, impossible travel, or anomalous post-login activity. This is most likely legitimate travel or a location change. Confidence is not higher because the alert has no context on the user's travel plans or session activity.",
+      "recommended_actions": [
+        "Optionally confirm with lnguyen that they are travelling or working from Canada",
+        "Check the session for unusual activity, such as new MFA device registrations, mailbox rules, or bulk downloads",
+        "Escalate only if impossible travel or other anomalies appear"
+      ],
+      "cited_sources": []
+    },
+    "retrieved": [],
+    "error": null
+  },
+  {
+    "id": "H016",
+    "prediction": {
+      "verdict": "true_positive",
+      "category": "valid_accounts",
+      "severity": "medium",
+      "confidence": 0.55,
+      "reasoning": "A successful sign-in for a Finance user came from a new country (Romania) on a new device. There is no travel notice on file, and the sign-in happened at 04:12 UTC. MFA was approved 40 seconds after the push, which fits either a user who is really signing in or an attacker with stolen credentials who got an MFA push approved by fatigue or social engineering. The alert has no evidence of post-login activity, so compromise is plausible but unconfirmed. Treat it as suspected account takeover until the user confirms the sign-in.",
+      "recommended_actions": [
+        "Contact pjones through a trusted out-of-band channel to confirm whether they made this sign-in and approved the MFA prompt",
+        "If the user did not make it, revoke active sessions and tokens, reset the password, and re-register MFA",
+        "Review the IdP and application logs for pjones for activity after the sign-in: mailbox rules, forwarding, file access, and finance or payment system actions",
+        "Check for earlier failed sign-ins or repeated MFA prompts, and for other accounts signing in from IP 203.0.113.190",
+        "Check whether the new device is registered or managed, and block the IP or apply conditional access if it is confirmed malicious",
+        "Alert the finance team to watch for fraudulent payment or bank-detail change requests"
+      ],
+      "cited_sources": []
+    },
+    "retrieved": [],
+    "error": null
+  },
+  {
+    "id": "H017",
+    "prediction": {
+      "verdict": "true_positive",
+      "category": "impair_defenses",
+      "severity": "high",
+      "confidence": 0.6,
+      "reasoning": "cmd.exe ran 'vssadmin delete shadows /all /quiet' on a user workstation (WKS-052) under user rlee. This command deletes all volume shadow copies without prompting. It is a common precursor to ransomware because it removes recovery options, and a standard user workstation has little routine reason to run it. No other alerts fired on the host, and no context shows an approved change or admin task. That lowers confidence from ransomware-level certainty but doesn't make the activity benign. No knowledge base sources were provided.",
+      "recommended_actions": [
+        "Contact rlee and their manager to verify whether the command was intentional, for example an approved admin or maintenance task",
+        "Review the process tree on WKS-052: the parent of cmd.exe, other commands run, and any recent file downloads or script executions",
+        "Check the host for ransomware indicators such as mass file modification or renaming, ransom notes, and new encrypted extensions",
+        "If the activity can't be verified, isolate WKS-052 from the network and preserve forensic evidence",
+        "Look for similar vssadmin, wmic shadowcopy, or bcdedit activity on other hosts and for rlee's account activity elsewhere",
+        "Check the status of backups and shadow copies, and reset rlee's credentials if compromise is suspected"
+      ],
+      "cited_sources": []
+    },
+    "retrieved": [],
+    "error": null
+  },
+  {
+    "id": "H018",
+    "prediction": {
+      "verdict": "benign",
+      "category": "benign",
+      "severity": "informational",
+      "confidence": 0.8,
+      "reasoning": "The command is `vssadmin resize shadowstorage /for=D: /on=D: /maxsize=20%`. It resizes shadow copy storage and does not delete shadow copies. It ran under the svc_backup service account, and its parent process was Veeam.Backup.Service.exe on a SQL server. That fits Veeam adjusting VSS storage during a backup job. Ransomware usually deletes shadows, or shrinks storage to a tiny size such as maxsize=401MB to force them out. Neither is the case here, because the 20% cap is a normal value. No reference material was provided, so this rests on the alert details alone.",
+      "recommended_actions": [
+        "Confirm that the svc_backup account and the Veeam job schedule match the 23:50 UTC timing.",
+        "Check that no vssadmin delete shadows, wmic shadowcopy delete, or similar commands ran on SQL01 around the same time.",
+        "Consider an allowlist or tuning for Veeam-parented vssadmin resize operations if this recurs.",
+        "Escalate if the Veeam parent process is unexpected, or if the maxsize is later set to a very small value."
+      ],
+      "cited_sources": []
+    },
+    "retrieved": [],
+    "error": null
+  },
+  {
+    "id": "H019",
+    "prediction": {
+      "verdict": "benign",
+      "category": "benign",
+      "severity": "informational",
+      "confidence": 0.7,
+      "reasoning": "A patch management agent (PatchPilot ppagent.exe) running as SYSTEM launched encoded PowerShell across 58 workstations in a 20-minute window at 02:00. That pattern fits a scheduled maintenance or patch window. The command line references a change ticket (CHG-2052), which suggests an approved change. Management agents commonly use -EncodedCommand. No evidence of malicious behavior is in the alert, such as an unusual parent process, external network connections, or credential access. The change reference is only a comment in the command line, which an attacker could copy, so I have not verified it. Confidence is moderate.",
+      "recommended_actions": [
+        "Verify CHG-2052 exists in the change management system and covers PatchPilot script execution on workstations at 02:00-02:20 on 2026-11-15",
+        "Decode the -EncodedCommand payload on a sample host and confirm it only performs patching or inventory tasks",
+        "Confirm ppagent.exe is the legitimate signed binary at the expected path and hash",
+        "Check for unexpected child processes or outbound connections from the PowerShell sessions",
+        "If the change ticket cannot be validated, escalate as a possible abuse of the management tool and review the PatchPilot server for compromise"
+      ],
+      "cited_sources": []
+    },
+    "retrieved": [],
+    "error": null
+  },
+  {
+    "id": "H020",
+    "prediction": {
+      "verdict": "benign",
+      "category": "benign",
+      "severity": "informational",
+      "confidence": 0.6,
+      "reasoning": "A management agent (PatchPilot ppagent.exe) running as SYSTEM launched encoded PowerShell on a single host. The command line references a change ticket (CHG-2060). This fits normal patch or management tooling, which often uses -EncodedCommand. Nothing in the alert shows malicious indicators such as a download cradle, an unusual parent process, lateral movement or multiple hosts. The change ticket reference is unverified and no reference material was provided, so confidence is moderate.",
+      "recommended_actions": [
+        "Verify CHG-2060 exists in the change system and covers PatchPilot activity on WKS-033 at this time",
+        "Decode the -EncodedCommand payload and confirm it only performs expected patch or management actions",
+        "Confirm the ppagent.exe binary path, signature and hash are legitimate",
+        "Check for any other hosts or unusual child processes or network connections from the same agent; escalate if the payload or ticket does not check out"
+      ],
+      "cited_sources": []
+    },
+    "retrieved": [],
+    "error": null
+  },
+  {
+    "id": "H021",
+    "prediction": {
+      "verdict": "benign",
+      "category": "benign",
+      "severity": "informational",
+      "confidence": 0.65,
+      "reasoning": "A service account (svc_sql) on a SQL server registered a task named 'DBMaint'. The task runs a local script, C:\\Scripts\\dbmaint.ps1, daily at 02:00, which is typical for database maintenance. The alert shows no encoded commands, download cradles, unusual paths, or odd account behavior. The evidence is limited, though. I can't confirm the change was authorized, and the script contents weren't provided.",
+      "recommended_actions": [
+        "Confirm with the DBA team or a change ticket that the DBMaint task was expected",
+        "Review the contents and hash of C:\\Scripts\\dbmaint.ps1 and the file permissions on C:\\Scripts",
+        "Check that svc_sql's logon source and time for this task registration match its normal pattern",
+        "Add a baseline or allowlist entry if the task is confirmed legitimate"
+      ],
+      "cited_sources": []
+    },
+    "retrieved": [],
+    "error": null
+  },
+  {
+    "id": "H022",
+    "prediction": {
+      "verdict": "true_positive",
+      "category": "scheduled_task",
+      "severity": "high",
+      "confidence": 0.85,
+      "reasoning": "A scheduled task named 'WinUpdateSvc' was created by the service account svc_sql on a SQL server. The name imitates a Windows update component, but the task runs C:\\Users\\Public\\update.exe, a world-writable directory that legitimate updaters don't use. It is set to run daily at 22:45, only 15 minutes after creation, which fits persistence. Service accounts rarely register tasks, so the account may be compromised. No reference material was provided, so this rests on the alert details alone.",
+      "recommended_actions": [
+        "Isolate SQL01 from the network, or at least restrict its outbound traffic, pending investigation",
+        "Collect and hash C:\\Users\\Public\\update.exe, then analyze it and check its reputation",
+        "Disable and remove the 'WinUpdateSvc' task after capturing its XML definition",
+        "Reset svc_sql credentials and review its recent logons, including source hosts and logon types (4624/4625)",
+        "Hunt for the same task name, the same binary and similar tasks on other hosts",
+        "Review SQL01 for related activity such as xp_cmdshell use, new accounts and other persistence",
+        "Check whether the task already ran at 22:45 and look at any child processes and network connections"
+      ],
+      "cited_sources": []
+    },
+    "retrieved": [],
+    "error": null
+  },
+  {
+    "id": "H023",
+    "prediction": {
+      "verdict": "true_positive",
+      "category": "indicator_removal",
+      "severity": "high",
+      "confidence": 0.6,
+      "reasoning": "Security event log on file server FS02 was cleared (event 1102) by an admin account during a remote session from JUMP01 at 03:15 UTC on a Sunday. Log clearing is a common defense-evasion technique (indicator removal), and the off-hours timing is suspicious. No change ticket or maintenance context is in the alert, so a legitimate admin action cannot be ruled out, which limits confidence.",
+      "recommended_actions": [
+        "Contact adm_tpatel to confirm whether they cleared the log and whether there was an approved change or maintenance window",
+        "Review the session from JUMP01 (logon events 4624/4648, RDP/PowerShell activity) and other actions by adm_tpatel around 03:15Z",
+        "Retrieve the pre-clear Security logs from the SIEM or log forwarder and check for other hosts with 1102 or 104 events",
+        "If unconfirmed, treat the account as compromised: reset credentials, disable the session, and isolate FS02 and investigate JUMP01",
+        "Check FS02 for signs of data access, new accounts, persistence, or other defense evasion"
+      ],
+      "cited_sources": []
+    },
+    "retrieved": [],
+    "error": null
+  },
+  {
+    "id": "H024",
+    "prediction": {
+      "verdict": "benign",
+      "category": "benign",
+      "severity": "informational",
+      "confidence": 0.6,
+      "reasoning": "PsExec was run from a jump host (JUMP01) by an admin account (adm_jkhan) against a file server. The command was 'wuauclt /detectnow', which only triggers a Windows Update detection cycle. It is a routine patch-management action with no payload, credential dumping or persistence. PsExec is a dual-use tool, and 02:30 UTC may fall in a maintenance window. The alert does not show whether the activity was authorized, so confidence is moderate. No knowledge base material was provided.",
+      "recommended_actions": [
+        "Confirm with adm_jkhan or the change calendar that the 02:30 UTC Windows Update check on FS01 was planned",
+        "Check that PsExec use from JUMP01 is an approved admin practice and that the adm_jkhan logon came from an expected source",
+        "Check FS01 for other remote execution, new services (PSEXESVC) or unexpected child processes around the same time",
+        "If the activity was not authorized, treat adm_jkhan as possibly compromised and escalate"
+      ],
+      "cited_sources": []
+    },
+    "retrieved": [],
+    "error": null
+  },
+  {
+    "id": "H025",
+    "prediction": {
+      "verdict": "true_positive",
+      "category": "remote_services",
+      "severity": "medium",
+      "confidence": 0.45,
+      "reasoning": "PsExec was run from a workstation (WKS-022) by an admin account (adm_jkhan) to open a remote command shell on a domain controller (DC02). This is lateral movement technique (remote services / admin shares) and is commonly abused by attackers. However, PsExec is also a legitimate admin tool, and the alert gives no evidence of a change ticket, a baseline, or follow-on malicious commands. Running it from a workstation rather than a jump host or admin server against a DC is unusual enough to warrant verification. No reference material was provided, so confidence is low.",
+      "recommended_actions": [
+        "Contact adm_jkhan to confirm the activity was intended and check for an associated change ticket or approved maintenance",
+        "Review the EDR process tree on WKS-022 and DC02 for commands run in the remote shell, and for PSEXESVC service creation and file drops",
+        "Check authentication logs (4624 type 3, 4672, 7045) on DC02 for the source and time of the logon",
+        "Verify whether adm_jkhan normally administers DC02 from WKS-022, and whether the credentials were recently used from other hosts",
+        "If unconfirmed, isolate WKS-022, reset adm_jkhan credentials, and investigate DC02 for compromise",
+        "Consider restricting PsExec and admin logons to DCs to designated privileged access workstations"
+      ],
+      "cited_sources": []
+    },
+    "retrieved": [],
+    "error": null
+  },
+  {
+    "id": "H026",
+    "prediction": {
+      "verdict": "benign",
+      "category": "benign",
+      "severity": "informational",
+      "confidence": 0.6,
+      "reasoning": "The account is named svc_scan. It made short (<10 s) network logons to 212 hosts from one source, 10.20.5.15, at 03:30, which fits an authenticated vulnerability or inventory scan run on a schedule. Nothing in the alert points to malicious activity: it shows no failed logons, no privilege escalation, no interactive or RDP sessions, and no execution or tool transfer. The pattern would also fit lateral movement with a compromised service account, so confidence is moderate. The scanner identity should be confirmed.",
+      "recommended_actions": [
+        "Confirm that 10.20.5.15 is the authorized scanner or inventory server and that a scan was scheduled for this window",
+        "Check that svc_scan's activity matches its baseline: usual source host, schedule, and logon type 3",
+        "Check the targeted hosts for anything unusual after the logons, such as new services, remote execution, or process creation by svc_scan",
+        "If the source or schedule isn't recognized, treat the account as compromised: reset its credentials and investigate 10.20.5.15",
+        "Add or confirm an allowlist or baseline for this scanner so similar alerts can be suppressed"
+      ],
+      "cited_sources": []
+    },
+    "retrieved": [],
+    "error": null
+  }
+]
