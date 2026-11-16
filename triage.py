@@ -54,9 +54,20 @@ def load_alerts(path=ALERTS_PATH):
         return json.load(f)
 
 
+_collection = None
+
+
+def get_collection():
+    """One shared Chroma client; creating several for the same path is not thread-safe."""
+    global _collection
+    if _collection is None:
+        _collection = chromadb.PersistentClient(path="chroma_db").get_collection("security_kb")
+    return _collection
+
+
 def retrieve(alert, n_results=5):
     """Find the most relevant knowledge base chunks for an alert."""
-    collection = chromadb.PersistentClient(path="chroma_db").get_collection("security_kb")
+    collection = get_collection()
     query = f"{alert['title']}. {alert['details']}"
     res = collection.query(query_texts=[query], n_results=n_results)
     return [

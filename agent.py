@@ -5,7 +5,7 @@ import sys
 import anthropic
 import chromadb
 
-from triage import MODEL, SYSTEM_PROMPT, TOOL as SUBMIT_TOOL, Triage, load_alerts
+from triage import MODEL, SYSTEM_PROMPT, TOOL as SUBMIT_TOOL, Triage, get_collection, load_alerts
 
 MAX_TURNS = 6  # hard cap so a confused model cannot loop (or spend) forever
 
@@ -31,14 +31,8 @@ AGENT_PROMPT = SYSTEM_PROMPT.replace(
     "Then call submit_triage.",
 )
 
-_collection = None
-
-
 def search_kb(query, n_results=4):
-    global _collection
-    if _collection is None:
-        _collection = chromadb.PersistentClient(path="chroma_db").get_collection("security_kb")
-    res = _collection.query(query_texts=[query], n_results=n_results)
+    res = get_collection().query(query_texts=[query], n_results=n_results)
     return [
         {"source": m["source"], "section": m["section"], "text": d}
         for d, m in zip(res["documents"][0], res["metadatas"][0])

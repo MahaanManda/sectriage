@@ -1,0 +1,41 @@
+[
+  {
+    "mode": "baseline",
+    "n": 40,
+    "errors": 0,
+    "verdict": 1.0,
+    "category": 0.9,
+    "severity": 0.95,
+    "severity_within1": 1.0,
+    "false_alarms": 0,
+    "missed_threats": 0,
+    "retrieval_recall": null,
+    "citation_recall": null
+  },
+  {
+    "mode": "rag",
+    "n": 40,
+    "errors": 0,
+    "verdict": 1.0,
+    "category": 0.925,
+    "severity": 0.975,
+    "severity_within1": 1.0,
+    "false_alarms": 0,
+    "missed_threats": 0,
+    "retrieval_recall": 0.7833333333333333,
+    "citation_recall": 0.7905982905982906
+  },
+  {
+    "mode": "agent",
+    "n": 40,
+    "errors": 0,
+    "verdict": 1.0,
+    "category": 0.9,
+    "severity": 0.975,
+    "severity_within1": 1.0,
+    "false_alarms": 0,
+    "missed_threats": 0,
+    "retrieval_recall": 0.7958333333333333,
+    "citation_recall": 0.7875
+  }
+]

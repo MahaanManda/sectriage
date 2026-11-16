@@ -1,0 +1,1113 @@
+[
+  {
+    "id": "A001",
+    "prediction": {
+      "verdict": "true_positive",
+      "category": "brute_force",
+      "severity": "high",
+      "confidence": 0.8,
+      "reasoning": "There were 47 failed sign-ins in 6 minutes for mlopez from an IP not seen before for this user, followed by a success. The knowledge base lists this pattern (a long failure run, an unfamiliar source IP, then a success) as malicious. The benign patterns are a steady retry rhythm from a known device after a password change, or a stale saved credential. The alert doesn't show either of those. The success likely means the account is compromised. The confidence isn't higher because the alert has no user confirmation, no IP reputation or geolocation, and no post-login activity.",
+      "recommended_actions": [
+        "Treat mlopez as potentially compromised: reset the password, revoke active sessions and tokens, and require MFA re-enrollment.",
+        "Review the successful sign-in from 203.0.113.45: MFA status, device, user agent and geolocation. Check for new MFA devices, mailbox rules, forwarding and file downloads after sign-in.",
+        "Contact mlopez to confirm whether the sign-in was theirs and whether they recently changed their password or travelled.",
+        "Check whether 203.0.113.45 targeted other accounts (spraying), then block or rate-limit it.",
+        "Search the IDP logs for other successful sign-ins from this IP and for lateral access by mlopez."
+      ],
+      "cited_sources": [
+        "T1110_brute_force.md",
+        "playbook_suspicious_login.md",
+        "T1078_valid_accounts.md"
+      ]
+    },
+    "retrieved": [
+      "T1078_valid_accounts.md",
+      "T1110_brute_force.md",
+      "playbook_suspicious_login.md"
+    ],
+    "error": null
+  },
+  {
+    "id": "A002",
+    "prediction": {
+      "verdict": "true_positive",
+      "category": "brute_force",
+      "severity": "medium",
+      "confidence": 0.8,
+      "reasoning": "120 different accounts were targeted from a single IP (198.51.100.23) in 30 minutes, with only 1-2 attempts each and no successes. That is the classic password-spraying pattern in T1110, and it doesn't fit the benign cases (one user or one device retrying a stale password). Nothing in the alert or the false-positive playbook explains it, such as a known scanner, NAT gateway or change ticket. No account was compromised, which keeps severity at medium.",
+      "recommended_actions": [
+        "Check the IdP logs for any successful sign-in from 198.51.100.23, or for the targeted accounts from other IPs, in the same and following windows",
+        "Block or rate-limit 198.51.100.23 and check its reputation and ownership (hosting provider, VPN, or internal NAT/scanner)",
+        "Confirm that it is not a known internal system, pen test, or misconfigured SSO/app integration",
+        "Review the targeted account list for a pattern such as a directory harvest or privileged accounts",
+        "Enforce MFA on the targeted accounts and reset passwords and revoke sessions for any that later show a success",
+        "Enable or tune smart lockout and spray-detection alerts"
+      ],
+      "cited_sources": [
+        "T1110_brute_force.md",
+        "playbook_false_positives_msp.md",
+        "playbook_suspicious_login.md"
+      ]
+    },
+    "retrieved": [
+      "T1078_valid_accounts.md",
+      "T1110_brute_force.md",
+      "T1566_phishing.md",
+      "playbook_false_positives_msp.md",
+      "playbook_malware_on_endpoint.md",
+      "playbook_suspicious_login.md"
+    ],
+    "error": null
+  },
+  {
+    "id": "A003",
+    "prediction": {
+      "verdict": "true_positive",
+      "category": "phishing",
+      "severity": "medium",
+      "confidence": 0.93,
+      "reasoning": "The email is phishing. It comes from a lookalike domain (c0mpany-helpdesk.example) registered 2 days ago, SPF failed, and the link goes to a login page on an unrelated domain. These match the malicious indicators in the phishing playbook and T1566 notes. One of the 3 recipients clicked, and proxy logs show no credentials were entered. The knowledge base rates a click without credential entry as medium severity.",
+      "recommended_actions": [
+        "Search all mailboxes for the message and purge it from every recipient",
+        "Identify the user who clicked and check EDR and proxy logs for follow-on activity, such as downloads or repeated visits to the site",
+        "Confirm no credentials were submitted, for example by checking sign-in logs for the clicker. If there is any doubt, reset the password and revoke sessions",
+        "Block the sender domain and the phishing URL at the email gateway and proxy, and check threat intel for the domain",
+        "Search for the same sender or URL being sent to other users",
+        "Reply to the reporter and remind the 3 recipients how to report phishing"
+      ],
+      "cited_sources": [
+        "T1566_phishing.md",
+        "playbook_user_reported_phishing.md"
+      ]
+    },
+    "retrieved": [
+      "T1566_phishing.md",
+      "playbook_user_reported_phishing.md"
+    ],
+    "error": null
+  },
+  {
+    "id": "A004",
+    "prediction": {
+      "verdict": "true_positive",
+      "category": "phishing",
+      "severity": "high",
+      "confidence": 0.85,
+      "reasoning": "The proxy logged tnguyen submitting a username and password to a fake Microsoft sign-in page on login-m365-verify.example. That is a lookalike login page on an unrelated domain, which the phishing notes list as a malicious indicator. The password has not been reset, so the credentials should be treated as compromised. The knowledge base has no known false-positive entry for this, such as a sanctioned phishing simulation. I could not check that against any simulation schedule, so confidence is not higher.",
+      "recommended_actions": [
+        "Reset tnguyen's password immediately and revoke all active sessions and tokens",
+        "Review tnguyen's sign-in logs for suspicious logins after 08:31Z, and check for new mailbox rules, forwarding and MFA method changes",
+        "Check whether the alert comes from an authorized phishing simulation; if not, treat it as a real compromise",
+        "Block login-m365-verify.example at the proxy and DNS, and check threat intel for the domain",
+        "Find the delivery email, search all mailboxes for it and remove it, then use proxy logs to find other users who visited or submitted credentials",
+        "Notify tnguyen and give phishing awareness guidance"
+      ],
+      "cited_sources": [
+        "playbook_user_reported_phishing.md",
+        "T1566_phishing.md"
+      ]
+    },
+    "retrieved": [
+      "T1078_valid_accounts.md",
+      "T1566_phishing.md",
+      "playbook_user_reported_phishing.md"
+    ],
+    "error": null
+  },
+  {
+    "id": "A005",
+    "prediction": {
+      "verdict": "true_positive",
+      "category": "phishing",
+      "severity": "high",
+      "confidence": 0.93,
+      "reasoning": "winword.exe spawned powershell.exe with -nop, -w hidden and -enc (a long base64 payload). The parent document came from an email attachment. The playbook lists each of these as a malicious indicator: Office parent process, encoded command, hidden window, and activity right after a phishing event. It rates an Office parent as high severity. Nothing matches the managed-environment false-positive patterns, because the parent is not an RMM agent or admin tool. The base64 string is truncated in the alert, so the payload is not decoded yet.",
+      "recommended_actions": [
+        "Isolate WKS-014 from the network via EDR",
+        "Decode the full base64 command to identify the payload, any download URLs and C2 hosts",
+        "Retrieve the email and attachment, then search for and purge the same message from other mailboxes",
+        "Check for child processes, dropped files, persistence (scheduled tasks, Run keys) and outbound connections from WKS-014",
+        "Reset jdoe's credentials and revoke sessions, and review jdoe's sign-ins for suspicious activity",
+        "Block the sender, attachment hash and any identified C2 indicators, and preserve evidence for IR"
+      ],
+      "cited_sources": [
+        "playbook_suspicious_powershell.md",
+        "playbook_false_positives_msp.md"
+      ]
+    },
+    "retrieved": [
+      "playbook_false_positives_msp.md",
+      "playbook_suspicious_powershell.md"
+    ],
+    "error": null
+  },
+  {
+    "id": "A006",
+    "prediction": {
+      "verdict": "true_positive",
+      "category": "scripting",
+      "severity": "high",
+      "confidence": 0.92,
+      "reasoning": "wscript.exe running a script from the user's Downloads folder spawned cmd.exe. The command used certutil -urlcache to fetch a.exe from an external IP (203.0.113.77) over HTTP into C:\\Users\\Public, then ran it immediately. This matches the T1059 malicious indicators: a script from a user-download folder, an unusual parent-child chain, and a download-and-execute command. It does not match any RMM or management-tool false-positive pattern in the playbook, because the parent, path, and source are all untrusted.",
+      "recommended_actions": [
+        "Isolate WKS-027 from the network immediately",
+        "Collect the wscript script from Downloads and C:\\Users\\Public\\a.exe, then hash them and submit to sandbox/VT",
+        "Block 203.0.113.77 at the proxy/firewall and search for other hosts contacting it",
+        "Identify how the script arrived (email attachment or browser download) and contact bsmith",
+        "Check for persistence (scheduled tasks, Run keys, services) and follow-on network activity",
+        "Reset bsmith's credentials and reimage the host if a malicious payload is confirmed"
+      ],
+      "cited_sources": [
+        "T1059_command_and_scripting.md",
+        "playbook_false_positives_msp.md"
+      ]
+    },
+    "retrieved": [
+      "T1059_command_and_scripting.md",
+      "playbook_false_positives_msp.md"
+    ],
+    "error": null
+  },
+  {
+    "id": "A007",
+    "prediction": {
+      "verdict": "true_positive",
+      "category": "credential_dumping",
+      "severity": "critical",
+      "confidence": 0.9,
+      "reasoning": "An unsigned procdump64.exe ran from C:\\Users\\Public, opened lsass.exe with full access, and wrote lsass.dmp to the same folder. This matches the T1003 malicious indicators: an unsigned tool, a dump written to a user-profile path, and a service account (svc-backup2) with no reason to dump LSASS. The KB rates a confirmed dump on a server as critical, because many accounts may be exposed. The KB lists no known false-positive pattern that fits this activity.",
+      "recommended_actions": [
+        "Isolate FS-02 from the network immediately",
+        "Secure lsass.dmp as evidence and check whether it was copied or sent off the host",
+        "List all accounts logged on to FS-02, including svc-backup2, and reset their credentials, privileged accounts first",
+        "Investigate how svc-backup2 was used: logon source, time, and the parent process of procdump64.exe",
+        "Check for lateral movement using the exposed credentials from FS-02",
+        "Hunt for the same tool, hash, or path on other hosts",
+        "Confirm with the backup team that this was not an approved activity"
+      ],
+      "cited_sources": [
+        "T1003_credential_dumping.md"
+      ]
+    },
+    "retrieved": [
+      "T1003_credential_dumping.md"
+    ],
+    "error": null
+  },
+  {
+    "id": "A008",
+    "prediction": {
+      "verdict": "true_positive",
+      "category": "credential_dumping",
+      "severity": "high",
+      "confidence": 0.85,
+      "reasoning": "The alert shows `reg save` exporting HKLM\\SAM and HKLM\\SYSTEM to C:\\Temp. The knowledge base lists a SAM/SYSTEM hive export as a credential dumping indicator. It names dumps written to temp folders and activity from accounts with no admin duties as malicious markers. Both apply here: helpdesk2 doesn't normally do admin work, and the export ran at 01:12, an unusual hour. The false-positive playbook describes no benign pattern that matches. It covers RMM, backup and security agents, and nothing in the alert points to those or to a change ticket.",
+      "recommended_actions": [
+        "Isolate WKS-033 and preserve forensic evidence, including the SAM and SYSTEM files in C:\\Temp.",
+        "Check whether the exported hive files were copied or sent off the host.",
+        "Investigate how helpdesk2 got admin rights and where it logged in from, then disable the account and reset its password.",
+        "List the accounts that have logged on to WKS-033 and reset their credentials, including the local administrator password. Check whether LAPS is in use.",
+        "Review the parent process and command line of the reg.exe execution.",
+        "Hunt for other signs of this account's activity, such as lateral movement and similar reg save events on other hosts.",
+        "Confirm no approved change ticket or maintenance task explains the activity."
+      ],
+      "cited_sources": [
+        "T1003_credential_dumping.md",
+        "playbook_false_positives_msp.md"
+      ]
+    },
+    "retrieved": [
+      "T1003_credential_dumping.md",
+      "playbook_false_positives_msp.md"
+    ],
+    "error": null
+  },
+  {
+    "id": "A009",
+    "prediction": {
+      "verdict": "true_positive",
+      "category": "ransomware",
+      "severity": "critical",
+      "confidence": 0.96,
+      "reasoning": "On FS-02, powershell.exe ran vssadmin delete shadows /all /quiet. About 2,300 files were then renamed with a .locked extension in 4 minutes. The knowledge base lists these as T1486 ransomware indicators: recovery deleted, rapid mass renames, and activity at night (03:40Z). A service account (svc-sql) running PowerShell on a file server is unusual. Nothing suggests a backup job, signed sync tool, or maintenance window.",
+      "recommended_actions": [
+        "Immediately isolate FS-02 from the network (EDR containment) and stop SMB shares to prevent further encryption",
+        "Disable/reset svc-sql credentials and investigate how it was compromised; hunt for its use on other hosts",
+        "Identify the powershell.exe parent process and payload; collect memory and forensic artifacts before reboot",
+        "Check for ransom notes, lateral movement, and encryption on other hosts or shares reachable from FS-02",
+        "Assess backups (offline/immutable) and begin recovery planning; shadow copies are gone",
+        "Invoke incident response plan and notify stakeholders; check for data exfiltration"
+      ],
+      "cited_sources": [
+        "T1486_data_encrypted_for_impact.md",
+        "playbook_false_positives_msp.md"
+      ]
+    },
+    "retrieved": [
+      "T1003_credential_dumping.md",
+      "T1070_indicator_removal.md",
+      "T1486_data_encrypted_for_impact.md",
+      "playbook_false_positives_msp.md"
+    ],
+    "error": null
+  },
+  {
+    "id": "A010",
+    "prediction": {
+      "verdict": "true_positive",
+      "category": "ransomware",
+      "severity": "critical",
+      "confidence": 0.95,
+      "reasoning": "The alert shows ransom note files (README_RESTORE.txt) created in 40 folders on shared drive FS-02 within 3 minutes. Users also report that documents can't be opened. Together these indicate active encryption, matching T1486 Data Encrypted for Impact. The playbook rates active encryption as critical. No known false-positive pattern explains this behavior.",
+      "recommended_actions": [
+        "Immediately isolate FS-02 from the network and stop SMB access to the share",
+        "Identify the source account or host performing the encryption from file server and SMB logs, then disable that account and isolate that host",
+        "Disconnect or lock backups and verify they are intact and offline",
+        "Escalate to incident response and start the ransomware playbook",
+        "Preserve memory and disk evidence and collect a sample of the ransom note and an encrypted file for identification",
+        "Look back 48 hours for precursor activity such as credential dumping, lateral movement, or backup deletion",
+        "Scope the affected shares and users, then plan restoration from clean backups"
+      ],
+      "cited_sources": [
+        "T1486_data_encrypted_for_impact.md",
+        "playbook_ransomware_indicators.md",
+        "playbook_false_positives_msp.md"
+      ]
+    },
+    "retrieved": [
+      "T1003_credential_dumping.md",
+      "T1486_data_encrypted_for_impact.md",
+      "playbook_false_positives_msp.md",
+      "playbook_ransomware_indicators.md"
+    ],
+    "error": null
+  },
+  {
+    "id": "A011",
+    "prediction": {
+      "verdict": "true_positive",
+      "category": "scheduled_task",
+      "severity": "high",
+      "confidence": 0.88,
+      "reasoning": "The task \"WindowsUpdateCheck\" mimics a legitimate Windows task name. It runs an unsigned binary (upd.exe) from C:\\Users\\Public, a user-writable folder, at logon as SYSTEM. It was created from a standard user session. Each of these matches the malicious indicators in the T1053 note. A standard user should not be able to create a SYSTEM task, so this may mean privilege escalation or a compromised account. The knowledge base lists no known false-positive pattern that fits. The alert has no evidence of actual harm yet, so confidence is not higher.",
+      "recommended_actions": [
+        "Isolate WKS-019 from the network pending investigation",
+        "Disable and delete the WindowsUpdateCheck task",
+        "Collect C:\\Users\\Public\\upd.exe, hash it, and submit it for analysis",
+        "Review akim's account activity: recent logons, phishing emails, downloads, and how the file arrived",
+        "Work out how a standard user created a SYSTEM task, and check for privilege escalation",
+        "Hunt for the same task name, file path, or hash on other hosts",
+        "Reset akim's credentials if compromise is confirmed"
+      ],
+      "cited_sources": [
+        "T1053_scheduled_task_job.md"
+      ]
+    },
+    "retrieved": [
+      "T1053_scheduled_task_job.md",
+      "T1547_boot_or_logon_autostart.md"
+    ],
+    "error": null
+  },
+  {
+    "id": "A012",
+    "prediction": {
+      "verdict": "true_positive",
+      "category": "autostart",
+      "severity": "high",
+      "confidence": 0.95,
+      "reasoning": "winword.exe created an HKCU Run value named \"OneDriveSync\" that launches a hidden PowerShell script from C:\\Users\\Public\\s.ps1. The knowledge base lists an autostart entry created by an Office process and pointing to a script in a user-writable folder as malicious. It also lists hidden-window PowerShell as an indicator. The name imitates OneDrive, and the real OneDrive client does not register itself this way from Word. This looks like a macro-driven payload setting up persistence, and no known false-positive pattern matches.",
+      "recommended_actions": [
+        "Isolate WKS-052 from the network",
+        "Remove the OneDriveSync Run value and quarantine C:\\Users\\Public\\s.ps1 after collecting a copy and its hash for analysis",
+        "Identify the Word document that was opened, including its source (email or download), and check for other recipients",
+        "Review PowerShell, network and process telemetry around 16:03Z for payload downloads, C2 connections and follow-on activity",
+        "Reset rpark's credentials and review the account's sign-ins",
+        "Hunt for the same Run key name, s.ps1 hash or document hash on other hosts",
+        "Run a full EDR scan and reimage the host if compromise is confirmed"
+      ],
+      "cited_sources": [
+        "T1547_boot_or_logon_autostart.md",
+        "playbook_suspicious_powershell.md",
+        "playbook_false_positives_msp.md"
+      ]
+    },
+    "retrieved": [
+      "T1547_boot_or_logon_autostart.md",
+      "playbook_false_positives_msp.md",
+      "playbook_suspicious_powershell.md"
+    ],
+    "error": null
+  },
+  {
+    "id": "A013",
+    "prediction": {
+      "verdict": "true_positive",
+      "category": "impair_defenses",
+      "severity": "high",
+      "confidence": 0.85,
+      "reasoning": "A script ran Set-MpPreference -DisableRealtimeMonitoring $true on WKS-061 under the standard user dchen, with no change ticket. The knowledge base lists this command as a T1562 indicator and rates defenses disabled by a script or non-admin account as High. The playbook of known false positives has no matching benign pattern. No follow-on activity such as backup deletion or mass file changes is visible yet, so I did not rate it Critical.",
+      "recommended_actions": [
+        "Isolate WKS-061 from the network until it is investigated",
+        "Re-enable Defender real-time protection and run a full scan",
+        "Identify the script, its origin and parent process, and how a standard user was able to change the setting (tamper protection status)",
+        "Review activity on WKS-061 around and after 09:55Z for payload downloads, exclusions added, backup/shadow copy deletion, or mass file changes",
+        "Contact dchen to confirm whether they ran the script, and check for credential compromise",
+        "Hunt for the same script or command on other hosts"
+      ],
+      "cited_sources": [
+        "T1562_impair_defenses.md",
+        "playbook_false_positives_msp.md"
+      ]
+    },
+    "retrieved": [
+      "T1053_scheduled_task_job.md",
+      "T1562_impair_defenses.md",
+      "playbook_false_positives_msp.md"
+    ],
+    "error": null
+  },
+  {
+    "id": "A014",
+    "prediction": {
+      "verdict": "true_positive",
+      "category": "impair_defenses",
+      "severity": "medium",
+      "confidence": 0.7,
+      "reasoning": "A whole-drive (C:\\) antivirus exclusion was added on WKS-070 by user tmiller. The knowledge base lists broad-path exclusions as an impair-defenses indicator. It treats an exclusion as benign only with a ticket, an admin account, and a later revert. This one has no ticket, and nothing suggests tmiller is IT staff. No other suspicious activity was seen, so the severity guidance for an unexplained exclusion with no other activity (medium) applies. The exclusion is unauthorized until someone shows otherwise.",
+      "recommended_actions": [
+        "Contact tmiller and their manager to confirm whether the exclusion was intentional and why it was made",
+        "Remove the C:\\ exclusion and re-enable full AV scanning on WKS-070",
+        "Run a full AV/EDR scan on WKS-070 and review activity around 14:30Z for new executables, scripts, or persistence",
+        "Find out how a user account could change AV policy, and check whether tmiller has admin rights or tamper protection is off",
+        "Check other hosts for similar broad exclusions",
+        "Escalate to high if suspicious activity or backup deletion shows up, or if tmiller's account looks compromised"
+      ],
+      "cited_sources": [
+        "T1562_impair_defenses.md",
+        "playbook_false_positives_msp.md"
+      ]
+    },
+    "retrieved": [
+      "T1547_boot_or_logon_autostart.md",
+      "T1562_impair_defenses.md",
+      "playbook_false_positives_msp.md",
+      "playbook_malware_on_endpoint.md"
+    ],
+    "error": null
+  },
+  {
+    "id": "A015",
+    "prediction": {
+      "verdict": "true_positive",
+      "category": "tool_transfer",
+      "severity": "high",
+      "confidence": 0.85,
+      "reasoning": "PowerShell used Invoke-WebRequest to download an executable from a raw IP address (198.51.100.9) into C:\\ProgramData. The file ran 8 seconds later. This matches the T1105 indicators: a raw-IP source, an executable in ProgramData, and download followed by execution. Nothing in the alert points to an RMM agent or other known false-positive pattern. The alert doesn't include the parent process or the file hash, so confidence is below certain.",
+      "recommended_actions": [
+        "Isolate WKS-038 from the network pending investigation",
+        "Collect C:\\ProgramData\\tool.exe, hash it and analyze it or check it against threat intelligence",
+        "Capture the full PowerShell command line and parent process, and review what tool.exe did after launch (child processes, network connections, persistence)",
+        "Block 198.51.100.9 at the proxy and firewall, and search for other hosts that contacted it",
+        "Interview lgarcia to confirm whether they ran this, and reset their credentials if it is not legitimate",
+        "Check for persistence such as scheduled tasks or run keys and scope for lateral movement"
+      ],
+      "cited_sources": [
+        "T1105_ingress_tool_transfer.md",
+        "playbook_suspicious_powershell.md",
+        "playbook_false_positives_msp.md"
+      ]
+    },
+    "retrieved": [
+      "T1105_ingress_tool_transfer.md",
+      "playbook_false_positives_msp.md",
+      "playbook_suspicious_powershell.md"
+    ],
+    "error": null
+  },
+  {
+    "id": "A016",
+    "prediction": {
+      "verdict": "true_positive",
+      "category": "remote_services",
+      "severity": "high",
+      "confidence": 0.8,
+      "reasoning": "A standard user (kpatel) made a logon type 10 (RDP) to a domain controller from a workstation (WKS-031) at 02:14. This is the user's first access to that server. The knowledge base lists a standard user reaching servers and off-hours sessions as malicious indicators for T1021. Nothing matches the known false-positive patterns, which cover technician or admin RDP on a schedule or RMM activity. The alert has no ticket, admin role, or change record to explain it. This looks like lateral movement with a possibly compromised account, and the target is a DC, so impact would be high. I can't rule out an unannounced admin task, so confidence is not higher.",
+      "recommended_actions": [
+        "Contact kpatel and their manager to confirm whether the 02:14 session was authorized, and check for a ticket or change record",
+        "Review activity on SRV-DC01 after the logon: processes run, tools executed, files copied, scheduled tasks or services created, and any group membership or account changes",
+        "Investigate WKS-031 for compromise, and check how kpatel's credentials were used there (logon history, phishing, malware)",
+        "If the session is not explained, disable or reset kpatel's credentials, terminate the session, and isolate WKS-031 (and SRV-DC01 if there are signs of compromise)",
+        "Hunt for other logons by kpatel or from WKS-031 to other servers, and check for RDP rights granted to standard users on DCs",
+        "Restrict RDP to domain controllers to admin accounts from jump hosts only"
+      ],
+      "cited_sources": [
+        "T1021_remote_services.md",
+        "playbook_false_positives_msp.md"
+      ]
+    },
+    "retrieved": [
+      "T1021_remote_services.md",
+      "playbook_false_positives_msp.md"
+    ],
+    "error": null
+  },
+  {
+    "id": "A017",
+    "prediction": {
+      "verdict": "true_positive",
+      "category": "remote_services",
+      "severity": "high",
+      "confidence": 0.8,
+      "reasoning": "The service account svc-backup authenticated over SMB to 25 hosts in 10 minutes from workstation WKS-022. It normally logs in only from the backup server. This matches the lateral movement pattern in T1021 and the valid-accounts misuse indicators in T1078: a known account, an unusual source host, and a sudden spread to many systems. The alert contains no maintenance window, change ticket or backup-server source that would point to the false-positive patterns in the playbook. The playbook says that any detail that doesn't match should be treated as suspicious. The likely explanations are a compromised service account or a compromised WKS-022.",
+      "recommended_actions": [
+        "Isolate WKS-022 from the network and start forensic triage on it (running processes, credential dumping tools, remote execution tools)",
+        "Reset the svc-backup password and revoke its active sessions and tickets",
+        "Review 4624/4648/5140 events on the 25 target hosts for logon types, admin share access, and any services or tasks created",
+        "Confirm with the backup team whether any backup job or maintenance change was scheduled from WKS-022",
+        "Check the 25 hosts for signs of follow-on activity such as new services, scheduled tasks, tool transfers or ransomware staging",
+        "Restrict svc-backup logons to the backup server only and review its privileges"
+      ],
+      "cited_sources": [
+        "T1021_remote_services.md",
+        "T1078_valid_accounts.md",
+        "playbook_false_positives_msp.md"
+      ]
+    },
+    "retrieved": [
+      "T1003_credential_dumping.md",
+      "T1021_remote_services.md",
+      "T1078_valid_accounts.md",
+      "T1110_brute_force.md",
+      "playbook_false_positives_msp.md",
+      "playbook_suspicious_login.md"
+    ],
+    "error": null
+  },
+  {
+    "id": "A018",
+    "prediction": {
+      "verdict": "true_positive",
+      "category": "network_discovery",
+      "severity": "medium",
+      "confidence": 0.8,
+      "reasoning": "WKS-044, a user workstation, connected to 254 IPs on port 445 in 90 seconds. That is a sweep of a whole /24 for SMB. The scan was run by nmap.exe from the user's Downloads folder, so it was not an installed or approved scanner. The knowledge base lists scanning from a non-IT user workstation as a malicious indicator. The alert doesn't mention a scanner inventory entry, a scheduled scan, or follow-up activity. I rate it medium, and it would be high if lateral movement or credential activity follows.",
+      "recommended_actions": [
+        "Contact ahall to ask whether they ran nmap and why. Check the scanner inventory and the vulnerability scan schedule for an approved scan.",
+        "If it is unexplained, isolate WKS-044 from the network.",
+        "Find out how nmap.exe got into Downloads. Check the browser history, the parent process, and the file hash.",
+        "Look for SMB logon attempts, authentication failures, or new remote sessions from WKS-044 to the hosts it scanned.",
+        "Review ahall's account for other suspicious activity and signs of earlier compromise. Reset credentials if compromise is suspected.",
+        "If the activity was an unapproved but non-malicious use, remove the tool and remind the user of policy."
+      ],
+      "cited_sources": [
+        "T1046_network_service_discovery.md"
+      ]
+    },
+    "retrieved": [
+      "T1046_network_service_discovery.md"
+    ],
+    "error": null
+  },
+  {
+    "id": "A019",
+    "prediction": {
+      "verdict": "true_positive",
+      "category": "indicator_removal",
+      "severity": "high",
+      "confidence": 0.8,
+      "reasoning": "Event 1102 shows the Security log was cleared on SRV-APP03 by admin_tmp at 03:05, which is outside normal hours. There is no change ticket. The knowledge base lists a Security log clear without a maintenance ticket as malicious (T1070) and rates unexplained clearing as High. Nothing in the alert matches a known false-positive pattern such as log rotation or scheduled cleanup. The generic-sounding temporary admin account adds to the concern. The alert shows no other indicators such as credential theft, so I am not rating it Critical.",
+      "recommended_actions": [
+        "Identify the session behind admin_tmp's log clear (logon type, source IP, process) and who owns the account",
+        "Check whether SIEM/EDR or a log forwarder still holds the cleared Security events, and review activity on SRV-APP03 before 03:05",
+        "Confirm with admins and change management whether any maintenance was planned",
+        "If unexplained, isolate SRV-APP03, disable or reset admin_tmp, and look for the same account on other hosts",
+        "Check for credential dumping, new accounts, persistence, or defense-impairment indicators on the host",
+        "Verify audit policy and log forwarding are working to catch future gaps"
+      ],
+      "cited_sources": [
+        "T1070_indicator_removal.md",
+        "playbook_false_positives_msp.md"
+      ]
+    },
+    "retrieved": [
+      "T1070_indicator_removal.md",
+      "playbook_false_positives_msp.md"
+    ],
+    "error": null
+  },
+  {
+    "id": "A020",
+    "prediction": {
+      "verdict": "true_positive",
+      "category": "valid_accounts",
+      "severity": "high",
+      "confidence": 0.88,
+      "reasoning": "rjones signed in from Lagos 3 minutes after a sign-in from Orlando, which is physically impossible. MFA was approved only after 9 prompts in 4 minutes, which is the MFA fatigue pattern. The user reported no travel. The playbook lists these as malicious indicators: an MFA approval the user did not make, and a sign-in from an unusual location. Nothing in the alert points to a benign cause such as a VPN or mobile-carrier IP. The pattern looks like account takeover with a compromised password.",
+      "recommended_actions": [
+        "Contact rjones through a separate channel (phone or in person) to confirm whether they approved the MFA prompt",
+        "Revoke all active sessions and tokens, reset the password, and review and re-register MFA methods",
+        "Review post-login activity for the Lagos session: mailbox rules, forwarding, file downloads, new MFA devices, OAuth grants",
+        "Check whether the Lagos source IP touched other accounts (password spray) and block it",
+        "Consider number-matching or phishing-resistant MFA and prompt rate limits to mitigate MFA fatigue",
+        "Document the outcome and escalate to incident response if the user denies the login"
+      ],
+      "cited_sources": [
+        "playbook_suspicious_login.md",
+        "T1078_valid_accounts.md"
+      ]
+    },
+    "retrieved": [
+      "T1078_valid_accounts.md",
+      "playbook_suspicious_login.md"
+    ],
+    "error": null
+  },
+  {
+    "id": "A021",
+    "prediction": {
+      "verdict": "true_positive",
+      "category": "valid_accounts",
+      "severity": "high",
+      "confidence": 0.85,
+      "reasoning": "A sign-in from an unfamiliar IP was followed by creation of a rule forwarding all mail to an external free-mail address. The playbooks list \"mailbox rules, forwarding\" right after sign-in as a typical account-takeover indicator. The knowledge base has no known false-positive pattern that covers this activity. This looks like a compromised account (T1078) used for mail collection.",
+      "recommended_actions": [
+        "Contact cwood through a separate channel to confirm whether they signed in and created the rule",
+        "Disable the forwarding rule and check for other rules, delegates and mailbox permissions",
+        "Revoke active sessions and tokens, reset the password, and review and re-register MFA methods",
+        "Review the unfamiliar IP's sign-in details and check whether it touched other accounts",
+        "Identify mail already forwarded to cwood.archive@mailbox-free.example and assess data exposure",
+        "Block the external address and look for related phishing or credential harvesting that led to the compromise"
+      ],
+      "cited_sources": [
+        "playbook_suspicious_login.md",
+        "T1078_valid_accounts.md"
+      ]
+    },
+    "retrieved": [
+      "T1078_valid_accounts.md",
+      "T1566_phishing.md",
+      "playbook_suspicious_login.md",
+      "playbook_user_reported_phishing.md"
+    ],
+    "error": null
+  },
+  {
+    "id": "A022",
+    "prediction": {
+      "verdict": "true_positive",
+      "category": "data_exfiltration",
+      "severity": "high",
+      "confidence": 0.8,
+      "reasoning": "A file server (FS-01) sent 14 GB to an unknown file-sharing destination at 01:30, an unusual hour. rclone.exe was running on the host. The exfiltration playbook lists all of these as indicators: a large transfer to a rare destination, rclone, an off-hours transfer, and a server that doesn't normally upload. The alert contains no approved change, maintenance window, or backup job that would explain it, so the false-positive playbook doesn't apply. The svc-sync account name could be a legitimate sync job, but that isn't confirmed. A service account running an unapproved rclone transfer is still suspicious, and the account may be compromised.",
+      "recommended_actions": [
+        "Block filedrop.example.net at the firewall and stop the rclone process or transfer on FS-01",
+        "Contain the svc-sync account by disabling it or rotating its credentials, and review its recent logons",
+        "Check with the file server and backup owners and in change tickets whether this transfer was approved",
+        "Find the rclone binary's path, hash, parent process and config (remote and credentials), and see how it got onto FS-01",
+        "Determine which shares and files were accessed or staged, and look for archives created before the upload",
+        "Look for earlier compromise on FS-01 such as credential theft, remote access, or other dropped tools",
+        "Escalate to incident response, and to legal or compliance if sensitive data was involved"
+      ],
+      "cited_sources": [
+        "playbook_data_exfiltration.md",
+        "playbook_false_positives_msp.md"
+      ]
+    },
+    "retrieved": [
+      "T1003_credential_dumping.md",
+      "T1053_scheduled_task_job.md",
+      "T1105_ingress_tool_transfer.md",
+      "playbook_data_exfiltration.md",
+      "playbook_false_positives_msp.md"
+    ],
+    "error": null
+  },
+  {
+    "id": "A023",
+    "prediction": {
+      "verdict": "true_positive",
+      "category": "data_exfiltration",
+      "severity": "high",
+      "confidence": 0.8,
+      "reasoning": "7z.exe built a 3.2 GB archive in C:\\Temp from the HR share. Right after that, the host made outbound HTTPS to 198.51.100.60, an IP with no prior history. This matches the staging-then-exfiltration pattern. The knowledge base false-positive playbook says that if any detail doesn't match known management or backup tools, the activity should be treated as suspicious. Nothing in the alert points to a backup job, change ticket, or known tool. The archive sits in a temp path and the destination is new. The data is sensitive HR data. I found no technique note on exfiltration specifically, so confidence is not higher. A maintenance ticket or an approved transfer could still explain it.",
+      "recommended_actions": [
+        "Isolate WKS-081 from the network.",
+        "Block 198.51.100.60 and review proxy/firewall logs to see how much data left and whether other hosts contacted it.",
+        "Preserve the C:\\Temp archive and collect the 7z command line, parent process, and EDR telemetry.",
+        "Contact hr_user3 and their manager to check for a legitimate business reason or change ticket; if none, reset credentials and review sign-ins.",
+        "Review access logs on the HR share for other bulk reads and assess data-breach notification obligations.",
+        "Escalate to incident response."
+      ],
+      "cited_sources": [
+        "playbook_false_positives_msp.md"
+      ]
+    },
+    "retrieved": [
+      "T1003_credential_dumping.md",
+      "T1486_data_encrypted_for_impact.md",
+      "T1566_phishing.md",
+      "playbook_false_positives_msp.md"
+    ],
+    "error": null
+  },
+  {
+    "id": "A024",
+    "prediction": {
+      "verdict": "true_positive",
+      "category": "malware",
+      "severity": "low",
+      "confidence": 0.75,
+      "reasoning": "EDR detected Trojan.GenericKD in a file downloaded through the browser. It was blocked and quarantined before it executed, and no other activity was seen. The playbook treats a detection on a browser download as malicious, not a known false positive. It rates a threat blocked before running on a single host as low severity. Nothing in the alert suggests an approved tool or a test file. GenericKD is a generic signature, so the verdict is not fully certain.",
+      "recommended_actions": [
+        "Record the file path, hash, and source URL of the download, and check the hash and URL reputation",
+        "Search for the same hash or download URL on other hosts and in proxy logs",
+        "Confirm the file never executed by reviewing the process tree, network connections, and persistence on WKS-090",
+        "Ask nfox what they were downloading and remind them of safe download practices",
+        "Block the source domain or URL if it is malicious, and run a full scan on WKS-090",
+        "Escalate and isolate the host if any execution, persistence, or callbacks turn up"
+      ],
+      "cited_sources": [
+        "playbook_malware_on_endpoint.md",
+        "T1105_ingress_tool_transfer.md"
+      ]
+    },
+    "retrieved": [
+      "T1105_ingress_tool_transfer.md",
+      "playbook_malware_on_endpoint.md"
+    ],
+    "error": null
+  },
+  {
+    "id": "A025",
+    "prediction": {
+      "verdict": "true_positive",
+      "category": "malware",
+      "severity": "high",
+      "confidence": 0.85,
+      "reasoning": "The EDR flagged loader behavior on a single user workstation (WKS-095, user vmoore). A process executed, a new Run key was added for persistence, and the host beacons to 203.0.113.99 every 60 seconds. This chain of execution, persistence and regular callbacks matches malware with C2. Nothing in the alert points to a management tool, signed binary, change ticket or maintenance window, and the knowledge base's false-positive playbook says to treat any unmatched detail as suspicious. The alert gives no path, signature or parent process, so confidence is below maximum.",
+      "recommended_actions": [
+        "Isolate WKS-095 from the network via EDR",
+        "Block 203.0.113.99 at the firewall/proxy and search for other hosts contacting it",
+        "Identify the process that created the Run key, its parent process, file path, hash and signature",
+        "Remove the Run key persistence, quarantine the binary and run a full scan",
+        "Review vmoore's recent activity (phishing email, downloads, odd logins) to find initial access, and reset credentials if needed",
+        "Check other machines for the same Run key or binary to scope the compromise"
+      ],
+      "cited_sources": [
+        "T1547_boot_or_logon_autostart.md",
+        "playbook_false_positives_msp.md"
+      ]
+    },
+    "retrieved": [
+      "T1046_network_service_discovery.md",
+      "T1110_brute_force.md",
+      "T1547_boot_or_logon_autostart.md",
+      "playbook_false_positives_msp.md"
+    ],
+    "error": null
+  },
+  {
+    "id": "A026",
+    "prediction": {
+      "verdict": "true_positive",
+      "category": "brute_force",
+      "severity": "critical",
+      "confidence": 0.93,
+      "reasoning": "There were 900 failed logons from a single external IP (198.51.100.200) against an internet-exposed RDP service. A successful administrator logon followed. This is the burst-of-failures-then-success pattern in the T1110 indicators. The logon came at 23:50Z, which is off-hours. None of the known false-positive patterns fit, because a failure burst from an external IP is not a saved-password issue or a technician session. The administrator account on a web server is probably compromised.",
+      "recommended_actions": [
+        "Isolate SRV-WEB01 from the network, or at least remove RDP exposure, and terminate the active administrator session",
+        "Reset the administrator password and any credentials cached or used on the host, and revoke sessions",
+        "Investigate post-logon activity: new accounts, scheduled tasks, persistence, tools downloaded, LSASS access, lateral movement to other hosts",
+        "Block 198.51.100.200 at the firewall and check whether it targeted other hosts",
+        "Remove direct internet RDP exposure; require VPN/RD Gateway with MFA and account lockout; rename or disable the default administrator account",
+        "Review the logs for the successful 4624 logon, including its logon type and source IP, to confirm it came from the attacker IP"
+      ],
+      "cited_sources": [
+        "T1110_brute_force.md",
+        "T1021_remote_services.md",
+        "playbook_false_positives_msp.md"
+      ]
+    },
+    "retrieved": [
+      "T1021_remote_services.md",
+      "T1110_brute_force.md",
+      "playbook_false_positives_msp.md"
+    ],
+    "error": null
+  },
+  {
+    "id": "A027",
+    "prediction": {
+      "verdict": "true_positive",
+      "category": "phishing",
+      "severity": "high",
+      "confidence": 0.92,
+      "reasoning": "The user opened a macro-enabled invoice.docm from an external sender. winword.exe then spawned cmd.exe running a download command. That matches a phishing-delivered malicious macro that fetches a payload. The knowledge base lists Office applications launching shell or script interpreters as a malicious indicator. The parent is not an RMM or management tool, so none of the known false-positive patterns apply. The playbook says a device that opened an attachment should be treated as possibly compromised.",
+      "recommended_actions": [
+        "Isolate WKS-101 from the network via EDR",
+        "Capture the full cmd.exe command line, the download URL or IP, and any dropped files, and preserve the invoice.docm sample",
+        "Check proxy, DNS and EDR logs for connections to the download host, and for follow-on processes or persistence such as scheduled tasks and run keys",
+        "Search all mailboxes for the same sender and attachment, then remove the messages and block the sender, domain and URLs",
+        "Reset pyoung's credentials and revoke their sessions if payload execution is confirmed",
+        "Reimage the host if a payload ran, and notify the user"
+      ],
+      "cited_sources": [
+        "playbook_user_reported_phishing.md",
+        "playbook_suspicious_powershell.md",
+        "playbook_false_positives_msp.md"
+      ]
+    },
+    "retrieved": [
+      "playbook_false_positives_msp.md",
+      "playbook_suspicious_powershell.md",
+      "playbook_user_reported_phishing.md"
+    ],
+    "error": null
+  },
+  {
+    "id": "A028",
+    "prediction": {
+      "verdict": "true_positive",
+      "category": "impair_defenses",
+      "severity": "high",
+      "confidence": 0.75,
+      "reasoning": "The EDR agent on a database server was stopped and an uninstall was attempted from a remote session. The account was svc-sql, a service account that should not run interactive remote sessions or remove security tooling. The alert has no change ticket or maintenance context, and the knowledge base lists agents stopped or uninstalled as a core T1562 indicator. Per the severity guidance, defenses disabled by a non-admin account is high, and the time is off-hours (21:15Z). Possible compromise of the svc-sql credentials, and lateral movement, are also a concern. Confidence is not higher because an approved reinstall or maintenance window can't be ruled out from this alert alone.",
+      "recommended_actions": [
+        "Check immediately for a change ticket or admin confirmation for EDR maintenance on SRV-DB02",
+        "Isolate SRV-DB02 if the activity is unexplained, and confirm the EDR agent is reinstalled or restored and healthy",
+        "Identify the source host and session type of the remote login by svc-sql (events 4624 and 4648, RDP/WinRM logs)",
+        "Review all activity on SRV-DB02 for the hour before the change, including new services, tasks, backup deletion and mass file changes",
+        "Reset svc-sql credentials and check where else the account has authenticated",
+        "Hunt for the same agent-tamper activity on other servers"
+      ],
+      "cited_sources": [
+        "T1562_impair_defenses.md",
+        "T1021_remote_services.md",
+        "T1070_indicator_removal.md"
+      ]
+    },
+    "retrieved": [
+      "T1021_remote_services.md",
+      "T1070_indicator_removal.md",
+      "T1562_impair_defenses.md"
+    ],
+    "error": null
+  },
+  {
+    "id": "A029",
+    "prediction": {
+      "verdict": "true_positive",
+      "category": "phishing",
+      "severity": "high",
+      "confidence": 0.9,
+      "reasoning": "wscript.exe ran invoice.js launched from the email client on a user workstation (sreed). It then connected to a rarely seen domain. This matches the T1059 indicator of wscript running scripts from email attachments, and it fits a phishing-delivered downloader. No known management tool, signed path, or change ticket explains it, so the false-positive playbook doesn't apply.",
+      "recommended_actions": [
+        "Isolate WKS-110 from the network via EDR",
+        "Identify the domain and resolved IP contacted and block them at the proxy and DNS; check threat intel",
+        "Collect invoice.js and the original email; detonate safely and review for downloaded payloads or persistence",
+        "Search all mailboxes for the same message or sender and remove it; block the sender",
+        "Reset sreed's credentials, revoke sessions, and review sign-in activity and mailbox rules",
+        "Hunt for other hosts that contacted the same domain or ran wscript from mail client paths",
+        "Reimage the host if a payload or persistence is confirmed"
+      ],
+      "cited_sources": [
+        "T1059_command_and_scripting.md",
+        "T1566_phishing.md",
+        "playbook_false_positives_msp.md",
+        "playbook_user_reported_phishing.md"
+      ]
+    },
+    "retrieved": [
+      "T1059_command_and_scripting.md",
+      "T1566_phishing.md",
+      "playbook_false_positives_msp.md",
+      "playbook_user_reported_phishing.md"
+    ],
+    "error": null
+  },
+  {
+    "id": "A030",
+    "prediction": {
+      "verdict": "true_positive",
+      "category": "tool_transfer",
+      "severity": "medium",
+      "confidence": 0.8,
+      "reasoning": "bitsadmin /transfer pulled update.dll from a raw IP (203.0.113.150) into %TEMP%. This matches the T1105 indicators: a LOLBin downloader, a raw IP destination, a DLL, and a temp path. Nothing in the alert matches a known management tool or vendor update, so the false-positive playbook doesn't apply. The DLL hasn't been loaded, so by the severity guidance this is medium (unknown destination, file not executed). It becomes high if the DLL executes.",
+      "recommended_actions": [
+        "Isolate WKS-115 or at least monitor it closely, and prevent the DLL from loading (quarantine or delete update.dll from %TEMP%)",
+        "Hash and analyze update.dll, and check 203.0.113.150 reputation",
+        "Block 203.0.113.150 at proxy/firewall and search for other hosts that contacted it",
+        "Identify the parent process and the mbrooks session that launched bitsadmin, and check for a change ticket",
+        "Check for DLL loads (rundll32/regsvr32/sideloading) from the file and for persistence via BITS jobs (bitsadmin /list)",
+        "Reset mbrooks credentials if the activity wasn't user-initiated"
+      ],
+      "cited_sources": [
+        "T1105_ingress_tool_transfer.md",
+        "playbook_false_positives_msp.md"
+      ]
+    },
+    "retrieved": [
+      "T1105_ingress_tool_transfer.md",
+      "playbook_false_positives_msp.md"
+    ],
+    "error": null
+  },
+  {
+    "id": "A031",
+    "prediction": {
+      "verdict": "true_positive",
+      "category": "remote_services",
+      "severity": "high",
+      "confidence": 0.85,
+      "reasoning": "A service named WinSvcHost was created remotely on WKS-019 from another workstation (WKS-022). Its binary is C:\\Users\\Public\\svc.exe, a user-writable path that legitimate services don't use, and the name imitates a system service. This matches the T1021 indicator of remote service creation after a remote login. The knowledge base lists workstation-to-workstation movement as malicious. The false-positive playbook describes RMM and patching activity, but nothing in the alert ties it to an approved tool or change. The 'remote-admin' account may be a legitimate admin account that has been compromised.",
+      "recommended_actions": [
+        "Isolate WKS-019 and WKS-022 from the network",
+        "Collect and analyze C:\\Users\\Public\\svc.exe (hash it, submit it to a sandbox) and disable the WinSvcHost service",
+        "Review logons (4624 type 3, 7045 service install, 5140 share access) by remote-admin across the environment to scope fan-out",
+        "Reset the remote-admin credentials and check for credential dumping on both hosts",
+        "Find out how WKS-022 was compromised and check for a change ticket or RMM tool that could explain this"
+      ],
+      "cited_sources": [
+        "T1021_remote_services.md",
+        "playbook_false_positives_msp.md"
+      ]
+    },
+    "retrieved": [
+      "T1021_remote_services.md",
+      "playbook_false_positives_msp.md"
+    ],
+    "error": null
+  },
+  {
+    "id": "A032",
+    "prediction": {
+      "verdict": "true_positive",
+      "category": "valid_accounts",
+      "severity": "high",
+      "confidence": 0.8,
+      "reasoning": "The account \"former.employee\" had been inactive for 214 days. It signed in over VPN and then accessed a file share. The knowledge base lists dormant or former-employee accounts becoming active as a T1078 indicator. It also lists access to data right after login as a warning sign. No known false-positive pattern fits, such as a returning employee, a travelling user, or a confirmed maintenance task. The alert has no source IP, device or MFA details, so this is probably misuse of a valid account but not yet confirmed.",
+      "recommended_actions": [
+        "Disable the account and revoke all active VPN and IdP sessions immediately",
+        "Confirm with HR and IT whether the account should still exist or whether the person has returned or been rehired",
+        "Review the VPN and IdP logs for source IP, geolocation, device and MFA events for this sign-in",
+        "Audit which file share and files were accessed, and look for downloads or copies",
+        "Check for MFA device changes, password resets and other use of the same credentials",
+        "Review other dormant accounts, and deprovision the account properly if it belongs to a leaver"
+      ],
+      "cited_sources": [
+        "T1078_valid_accounts.md",
+        "playbook_suspicious_login.md"
+      ]
+    },
+    "retrieved": [
+      "T1021_remote_services.md",
+      "T1078_valid_accounts.md",
+      "playbook_suspicious_login.md"
+    ],
+    "error": null
+  },
+  {
+    "id": "A033",
+    "prediction": {
+      "verdict": "benign",
+      "category": "benign",
+      "severity": "informational",
+      "confidence": 0.85,
+      "reasoning": "Encoded PowerShell was launched by the signed RMM agent from Program Files on 60 hosts at the same time, 02:00. This matches maintenance ticket CHG-1042. The false-positive playbook lists RMM-launched PowerShell with encoded command lines as a common look-alike. The suspicious PowerShell playbook treats scripts run by IT management tools during scheduled maintenance as benign. The alert shows no download cradles, unusual parent process or external connections. Confidence isn't higher because the decoded payload and the ticket scope were not checked.",
+      "recommended_actions": [
+        "Confirm CHG-1042 covers the RMM agent, the 60 hosts and the 02:00 time window.",
+        "Decode a sample of the -enc payloads and confirm they match the approved maintenance script.",
+        "Check that the RMM agent binary hash and signature are expected, and that the RMM console shows no unauthorized job or account activity.",
+        "Look for outbound connections to unusual external hosts from the affected hosts during the window; escalate if the payload or scope differs from the ticket."
+      ],
+      "cited_sources": [
+        "playbook_false_positives_msp.md",
+        "playbook_suspicious_powershell.md",
+        "T1059_command_and_scripting.md"
+      ]
+    },
+    "retrieved": [
+      "T1059_command_and_scripting.md",
+      "T1070_indicator_removal.md",
+      "T1562_impair_defenses.md",
+      "playbook_false_positives_msp.md",
+      "playbook_suspicious_powershell.md"
+    ],
+    "error": null
+  },
+  {
+    "id": "A034",
+    "prediction": {
+      "verdict": "benign",
+      "category": "benign",
+      "severity": "informational",
+      "confidence": 0.88,
+      "reasoning": "The 12 failures involve a single account (asmith) from her usual laptop, at steady 5-minute intervals. They began after her password changed yesterday, and the mail app is retrying the old password. The knowledge base lists this pattern as benign: one user, a recent password change, a device retrying a stale credential at a steady rhythm. The alert shows none of the malicious indicators: multiple accounts, unfamiliar IPs, off-hours timing, or a success after a long failure run.",
+      "recommended_actions": [
+        "Ask asmith to update the saved password in the mobile mail app, or remove and re-add the account",
+        "Confirm in the IdP logs that the failures come only from her known device and IP and that no unexpected successful sign-ins followed",
+        "Close the alert if the failures stop after the credential update",
+        "Escalate and reset credentials if failures appear from new IPs or other accounts, or if a success follows the failure run"
+      ],
+      "cited_sources": [
+        "T1110_brute_force.md"
+      ]
+    },
+    "retrieved": [
+      "T1110_brute_force.md",
+      "playbook_suspicious_login.md"
+    ],
+    "error": null
+  },
+  {
+    "id": "A035",
+    "prediction": {
+      "verdict": "benign",
+      "category": "benign",
+      "severity": "informational",
+      "confidence": 0.9,
+      "reasoning": "The alert describes a port scan (ports 1-1024 across 500 hosts) from scanner-01, which the alert itself calls an approved vulnerability scanner. It ran under the svc-scan account at the scheduled Sunday 01:00 time. The knowledge base lists approved scanners running from known hosts on a schedule as benign for T1046. Nothing in the alert points to follow-up activity or compromise. I could not independently check the scanner inventory or schedule, so confidence is not higher.",
+      "recommended_actions": [
+        "Confirm scanner-01 and svc-scan are in the scanner inventory and that the Sunday 01:00 scan is on the schedule.",
+        "Consider suppressing or tuning this IDS signature for scanner-01 during the scheduled window.",
+        "Alert again if scanner-01 scans outside its schedule or if follow-up login or exploit traffic appears against the scanned hosts."
+      ],
+      "cited_sources": [
+        "T1046_network_service_discovery.md"
+      ]
+    },
+    "retrieved": [
+      "T1046_network_service_discovery.md"
+    ],
+    "error": null
+  },
+  {
+    "id": "A036",
+    "prediction": {
+      "verdict": "benign",
+      "category": "benign",
+      "severity": "informational",
+      "confidence": 0.85,
+      "reasoning": "A signed endpoint security agent binary, running from its standard install path as SYSTEM, read LSASS memory during a scheduled scan. The knowledge base lists legitimate security software touching LSASS as benign when it is signed and in a known path. None of the malicious indicators appear: no unsigned or renamed tool, no dump files in temp or user folders, and no non-admin account. The alert doesn't name the product or give a hash, so that has to be confirmed.",
+      "recommended_actions": [
+        "Confirm the binary name, hash, and signer match the approved endpoint security product deployed in the environment",
+        "Verify the scan schedule matches the activity time and check for any LSASS dump files on WKS-120",
+        "Record this pattern as a known false positive, or add an EDR exclusion if approved",
+        "Escalate using the T1003 triage steps if the binary or path doesn't match the approved product"
+      ],
+      "cited_sources": [
+        "T1003_credential_dumping.md",
+        "playbook_false_positives_msp.md"
+      ]
+    },
+    "retrieved": [
+      "T1003_credential_dumping.md",
+      "playbook_false_positives_msp.md",
+      "playbook_malware_on_endpoint.md"
+    ],
+    "error": null
+  },
+  {
+    "id": "A037",
+    "prediction": {
+      "verdict": "benign",
+      "category": "benign",
+      "severity": "informational",
+      "confidence": 0.9,
+      "reasoning": "500 agents went offline at the same moment (14:02) and reconnected together between 15:00 and 15:10. The cloud provider's status page reports a regional incident. The playbook lists mass agent offline events during a cloud or vendor outage as a known false positive. A uniform, simultaneous drop that recovers by itself fits an outage better than agent tampering (T1562), which would normally be selective and tied to a user or script. The alert shows no account, tool, or process activity.",
+      "recommended_actions": [
+        "Confirm that the vendor incident covers the same region and time window as the outage",
+        "Spot-check a sample of reconnected agents for health, and look for service stop or tamper events and unexpected logins in the hour before 14:02",
+        "Verify that any agents still offline are not outliers, and investigate those individually",
+        "Record this as a known outage pattern for future triage",
+        "Consider a monitoring grace period or correlation with vendor status for mass-offline alerts"
+      ],
+      "cited_sources": [
+        "playbook_false_positives_msp.md",
+        "T1562_impair_defenses.md"
+      ]
+    },
+    "retrieved": [
+      "T1021_remote_services.md",
+      "T1105_ingress_tool_transfer.md",
+      "T1110_brute_force.md",
+      "T1562_impair_defenses.md",
+      "playbook_false_positives_msp.md"
+    ],
+    "error": null
+  },
+  {
+    "id": "A038",
+    "prediction": {
+      "verdict": "benign",
+      "category": "benign",
+      "severity": "informational",
+      "confidence": 0.85,
+      "reasoning": "tech_rivera used RDP from the admin workstation ADM-01 to 20 servers within 2 hours. The activity falls inside an approved patch window and is covered by change ticket CHG-1050. The playbook lists admin accounts logging in to many hosts during patching, and technician RDP to many machines, as known false positives. The source is a dedicated admin workstation, not a workstation-to-workstation hop. The alert gives no sign of post-login tooling, file copies or unusual accounts. I did not verify that the ticket covers these 20 servers.",
+      "recommended_actions": [
+        "Confirm that the 20 destination servers match the scope of CHG-1050",
+        "Spot-check the sessions for unexpected post-login activity such as new tasks, services or tool transfers",
+        "Verify that tech_rivera is a known admin and that ADM-01 is healthy",
+        "Close the alert and record the pattern as a known patch-window false positive"
+      ],
+      "cited_sources": [
+        "playbook_false_positives_msp.md",
+        "T1021_remote_services.md"
+      ]
+    },
+    "retrieved": [
+      "T1021_remote_services.md",
+      "T1562_impair_defenses.md",
+      "playbook_false_positives_msp.md"
+    ],
+    "error": null
+  },
+  {
+    "id": "A039",
+    "prediction": {
+      "verdict": "benign",
+      "category": "benign",
+      "severity": "informational",
+      "confidence": 0.85,
+      "reasoning": "The scheduled task ContosoUpdate was created by the installer of an approved software package. It runs a signed binary from Program Files, as SYSTEM. The knowledge base lists installer-created tasks with known names, signed binaries and standard install paths as benign. None of the malicious indicators are present: no user-writable paths, no encoded commands, no suspicious preceding logon and no unexpected creator. The alert gives no hash or signer details, so a quick check is still worthwhile.",
+      "recommended_actions": [
+        "Confirm the ContosoUpdate package was an approved deployment, for example by checking the software deployment or change records for WKS-130.",
+        "Verify the binary's signature and hash, and that the task action points to the Program Files path.",
+        "Check whether the same task exists on other hosts that received the package.",
+        "Close the alert as benign if those checks match."
+      ],
+      "cited_sources": [
+        "T1053_scheduled_task_job.md"
+      ]
+    },
+    "retrieved": [
+      "T1053_scheduled_task_job.md"
+    ],
+    "error": null
+  },
+  {
+    "id": "A040",
+    "prediction": {
+      "verdict": "benign",
+      "category": "benign",
+      "severity": "informational",
+      "confidence": 0.9,
+      "reasoning": "The Berlin sign-in matches an HR-recorded business trip this week. It came from dlee's usual device, and dlee completed MFA personally. The playbook lists a traveling user as a benign pattern. The alert shows none of the malicious indicators: no MFA approved without the user's action, no new device, and no unusual session activity.",
+      "recommended_actions": [
+        "Close the alert as expected travel activity.",
+        "Optionally spot-check the session for new mailbox rules, forwarding, or newly registered MFA methods.",
+        "Re-open and follow the playbook if dlee later denies the login or another sign-in appears from a different location."
+      ],
+      "cited_sources": [
+        "playbook_suspicious_login.md",
+        "T1078_valid_accounts.md"
+      ]
+    },
+    "retrieved": [
+      "T1078_valid_accounts.md",
+      "playbook_suspicious_login.md"
+    ],
+    "error": null
+  }
+]
